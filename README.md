@@ -236,7 +236,8 @@ MIT License - see [LICENSE](LICENSE) file for details
 
 ## 🔗 Links
 
-- **Live Demo:** Coming soon (Vercel)
+- **Live Demo:** https://agent-hackathon-vert.vercel.app/ ✨
+- **GitHub:** https://github.com/dumplingsol/agent-hackathon
 - **Hackathon:** https://colosseum.com/agent-hackathon
 - **Agent Profile:** spot-polymarket-trader (#289)
 - **Forum Post:** Coming soon
