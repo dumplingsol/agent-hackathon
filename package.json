@@ -1,8 +1,8 @@
 {
-  "name": "solmail-monorepo",
+  "name": "payinbox-monorepo",
   "version": "1.0.0",
   "private": true,
-  "description": "SolMail - Send crypto via email",
+  "description": "PayInbox - Send crypto via email",
   "scripts": {
     "install:agent": "cd agent && npm install",
     "install:web": "cd web && npm install",

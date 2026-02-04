@@ -7,7 +7,7 @@ import { WalletContextProvider } from '@/lib/wallet'
 const inter = Inter({ subsets: ['latin'] })
 
 export const metadata: Metadata = {
-  title: 'SolMail - Send Crypto via Email',
+  title: 'PayInbox - Send Crypto via Email',
   description: 'Send SOL or USDC to anyone via email. No wallet required.',
 }
 

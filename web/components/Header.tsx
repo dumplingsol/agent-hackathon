@@ -10,7 +10,7 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-gradient-to-br from-solana-purple to-solana-green rounded-lg" />
-          <span className="text-xl font-bold">SolMail</span>
+          <span className="text-xl font-bold">PayInbox</span>
         </Link>
 
         {/* Menu */}

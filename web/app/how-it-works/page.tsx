@@ -9,7 +9,7 @@ export default function HowItWorks() {
       <Header />
       
       <section className="max-w-4xl mx-auto px-4 py-20">
-        <h1 className="text-4xl font-bold mb-8 text-center">How SolMail Works</h1>
+        <h1 className="text-4xl font-bold mb-8 text-center">How PayInbox Works</h1>
         
         <div className="space-y-12">
           <Step

@@ -1,7 +1,7 @@
 {
-  "name": "solmail-web",
+  "name": "payinbox-web",
   "version": "1.0.0",
-  "description": "SolMail frontend - send crypto via email",
+  "description": "PayInbox frontend - send crypto via email",
   "scripts": {
     "dev": "next dev",
     "build": "next build",

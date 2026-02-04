@@ -1,7 +1,7 @@
 {
-  "name": "solmail-agent",
+  "name": "payinbox-agent",
   "version": "1.0.0",
-  "description": "SolMail agent service - monitors chain and sends emails",
+  "description": "PayInbox agent service - monitors chain and sends emails",
   "main": "index.js",
   "scripts": {
     "start": "node index.js",

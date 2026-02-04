@@ -1,4 +1,4 @@
-# 💌 SolMail - Send Crypto via Email
+# 💌 PayInbox - Send Crypto via Email
 
 > **Colosseum Agent Hackathon 2026** - Send SOL or USDC to anyone via email. No wallet required.
 
@@ -21,7 +21,7 @@ Sending crypto requires the recipient to:
 
 ## 💡 The Solution
 
-**SolMail** makes sending crypto as easy as email:
+**PayInbox** makes sending crypto as easy as email:
 
 1. **Sender:** Enter recipient's email + amount → Sign transaction
 2. **Smart Contract:** Locks funds in secure escrow
