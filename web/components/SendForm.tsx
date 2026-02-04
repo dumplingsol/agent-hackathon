@@ -107,10 +107,10 @@ export default function SendForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-[#1A3B5D] border border-gray-200 dark:border-gray-700/50 rounded-2xl p-8 shadow-lg">
       {/* Email Input */}
       <div className="mb-6">
-        <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
           Recipient email
         </label>
         <input
@@ -120,14 +120,14 @@ export default function SendForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="friend@example.com"
           required
-          className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-[#0A2540] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition"
         />
       </div>
 
       {/* Amount & Token */}
       <div className="mb-6 grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="amount" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="amount" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Amount
           </label>
           <input
@@ -139,19 +139,19 @@ export default function SendForm() {
             step="0.01"
             min="0.01"
             required
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition"
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-[#0A2540] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition"
           />
         </div>
 
         <div>
-          <label htmlFor="token" className="block text-sm font-medium text-gray-700 mb-2">
+          <label htmlFor="token" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
             Token
           </label>
           <select
             id="token"
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition bg-white"
+            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-[#0A2540] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition bg-white"
           >
             <option value="USDC">USDC</option>
             <option value="SOL">SOL</option>
@@ -176,7 +176,7 @@ export default function SendForm() {
       </button>
 
       {/* Info Text */}
-      <p className="text-sm text-gray-500 text-center mt-4">
+      <p className="text-sm text-gray-500 dark:text-gray-400 text-center mt-4">
         They'll receive an email with a link to claim. Expires in 72 hours.
       </p>
     </form>

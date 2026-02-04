@@ -15,7 +15,7 @@ export default function Home() {
           Send crypto as easy as email
         </h1>
         
-        <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto">
+        <p className="text-xl text-gray-600 dark:text-gray-300 mb-12 max-w-2xl mx-auto">
           No wallet required. Just an email address.
           <br />
           Fast, secure, and powered by Solana.
@@ -49,7 +49,7 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="border-t border-gray-200 py-8 text-center text-gray-600">
+      <footer className="border-t border-gray-200 dark:border-gray-700/30 py-8 text-center text-gray-600 dark:text-gray-300">
         <p>Built for Colosseum Agent Hackathon • Powered by Solana</p>
       </footer>
     </main>
@@ -61,7 +61,7 @@ function Feature({ icon, title, description }: { icon: string, title: string, de
     <div className="text-center p-6">
       <div className="text-4xl mb-4">{icon}</div>
       <h3 className="text-xl font-semibold mb-2">{title}</h3>
-      <p className="text-gray-600">{description}</p>
+      <p className="text-gray-600 dark:text-gray-300">{description}</p>
     </div>
   )
 }
