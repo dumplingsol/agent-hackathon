@@ -1,0 +1,18 @@
+{
+  "name": "solmail-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "SolMail - Send crypto via email",
+  "scripts": {
+    "install:agent": "cd agent && npm install",
+    "install:web": "cd web && npm install",
+    "install:all": "npm run install:agent && npm run install:web",
+    "dev:agent": "cd agent && npm run dev",
+    "dev:web": "cd web && npm run dev",
+    "build": "cd web && npm run build",
+    "start": "cd web && npm start"
+  },
+  "keywords": ["solana", "email", "crypto", "payments"],
+  "author": "spot-polymarket-trader",
+  "license": "MIT"
+}
