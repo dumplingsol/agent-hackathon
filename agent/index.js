@@ -12,6 +12,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const crypto = require('crypto');
+const { keccak256 } = require('js-sha3');
 const rateLimit = require('express-rate-limit');
 const { Connection, PublicKey } = require('@solana/web3.js');
 const { Resend } = require('resend');
@@ -23,7 +24,7 @@ const { Resend } = require('resend');
 const config = {
   port: parseInt(process.env.PORT, 10) || 3001,
   solanaRpc: process.env.SOLANA_RPC || 'https://api.devnet.solana.com',
-  programId: process.env.PROGRAM_ID || 'EGWdk3hNnHse2xZw8AZy1HwDJiGkSnscMitrbs4Ax5V4',
+  programId: process.env.PROGRAM_ID || '14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h',
   resendApiKey: process.env.RESEND_API_KEY,
   serverSalt: process.env.SERVER_SALT,
   frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
@@ -169,7 +170,9 @@ function generateClaimCode() {
 }
 
 function hashClaimCode(claimCode) {
-  return crypto.createHash('sha256').update(claimCode).digest();
+  // Use Keccak256 to match the on-chain Solana program
+  const hash = keccak256(claimCode);
+  return Buffer.from(hash, 'hex');
 }
 
 function hashEmail(email) {

@@ -1,11 +1,15 @@
 [toolchain]
+anchor_version = "0.32.0"
 
 [features]
 resolution = true
 skip-lint = false
 
 [programs.localnet]
-payinbox = "EGWdk3hNnHse2xZw8AZy1HwDJiGkSnscMitrbs4Ax5V4"
+payinbox = "14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h"
+
+[programs.devnet]
+payinbox = "14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h"
 
 [registry]
 url = "https://api.apr.dev"

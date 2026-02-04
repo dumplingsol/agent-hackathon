@@ -117,7 +117,7 @@ solana airdrop 2
 ### Agent Service
 - **Rate limiting** - Prevents spam and DoS
 - **Email validation** - RFC 5321 compliant
-- **Secure hashing** - SHA-256 with server salt
+- **Secure hashing** - Keccak256 for claim codes (matches on-chain), SHA-256 for email privacy
 - **Claim codes via email only** - Never exposed to frontend in production
 
 ### Frontend
