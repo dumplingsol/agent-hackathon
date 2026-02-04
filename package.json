@@ -12,7 +12,19 @@
     "build": "cd web && npm run build",
     "start": "cd web && npm start"
   },
-  "keywords": ["solana", "email", "crypto", "payments"],
+  "keywords": [
+    "solana",
+    "email",
+    "crypto",
+    "payments"
+  ],
   "author": "spot-polymarket-trader",
-  "license": "MIT"
+  "license": "MIT",
+  "devDependencies": {
+    "@playwright/test": "^1.58.1",
+    "playwright": "^1.58.1"
+  },
+  "dependencies": {
+    "puppeteer-core": "^24.36.1"
+  }
 }

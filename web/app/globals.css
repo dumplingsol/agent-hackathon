@@ -7,6 +7,7 @@
   --solana-green: #14F195;
 }
 
+/* Light mode body */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
@@ -14,30 +15,124 @@ body {
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: #F3FAFF;
-  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.08) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(0, 0, 0, 0.04) 1px, transparent 1px);
   background-size: 20px 20px;
+  color: #1a1a2e;
 }
 
-/* Dark mode - Stripe inspired */
+/* Dark mode body */
 .dark body {
   background-color: #0d1225;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
   background-size: 20px 20px;
   color: #E3E8EF;
 }
 
-code {
-  font-family: 'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+/* Code/monospace font */
+code, .font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
 
-/* Wallet Adapter overrides */
+/* Wallet Adapter button overrides */
 .wallet-adapter-button {
   background: linear-gradient(135deg, #9945FF 0%, #14F195 100%) !important;
   transition: all 0.2s ease;
+  font-weight: 600 !important;
 }
 
-.wallet-adapter-button:hover {
+.wallet-adapter-button:hover:not([disabled]) {
   opacity: 0.9;
   transform: translateY(-1px);
+}
+
+.wallet-adapter-button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Wallet modal dark mode */
+.dark .wallet-adapter-modal-wrapper {
+  background-color: #1a1f3a !important;
+}
+
+.dark .wallet-adapter-modal-title {
+  color: white !important;
+}
+
+.dark .wallet-adapter-modal-list li {
+  background-color: #0d1225 !important;
+}
+
+.dark .wallet-adapter-modal-list li:hover {
+  background-color: #2a2f4a !important;
+}
+
+/* Focus ring styles */
+input:focus, select:focus, button:focus {
+  outline: none;
+}
+
+input:focus-visible, select:focus-visible, button:focus-visible {
+  ring: 2px;
+  ring-offset: 2px;
+  ring-color: var(--solana-purple);
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #3a3f5a;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #4a4f6a;
+}
+
+/* Toast customization */
+[data-sonner-toast] {
+  font-family: inherit;
+}
+
+/* Prevent FOUC for theme */
+.dark {
+  color-scheme: dark;
+}
+
+/* Animation utilities */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Remove number input spinners */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
 }

@@ -1,0 +1,20 @@
+[package]
+name = "payinbox"
+version = "0.1.0"
+description = "Send crypto via email - no wallet required"
+edition = "2021"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "payinbox"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.29.0"
+anchor-spl = "0.29.0"

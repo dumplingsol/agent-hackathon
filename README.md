@@ -1,257 +1,209 @@
-# 💌 PayInbox - Send Crypto via Email
+# PayInbox - Send Crypto via Email
 
-> **Colosseum Agent Hackathon 2026** - Send SOL or USDC to anyone via email. No wallet required.
+Send SOL or USDC to anyone using just their email address. No wallet required for recipients.
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Agent: spot-polymarket-trader](https://img.shields.io/badge/Agent-spot--polymarket--trader-%239945FF)](https://colosseum.com/agent-hackathon)
+Built for the Colosseum Agent Hackathon. Powered by Solana.
 
----
+## 🎯 What It Does
 
-## 🎯 The Problem
+1. **Sender** connects wallet and enters recipient's email + amount
+2. Funds are locked in an **on-chain escrow** (Solana smart contract)
+3. **Recipient gets an email** with a unique claim link
+4. Recipient can **create a new wallet** or connect existing one to claim
 
-Sending crypto requires the recipient to:
-1. Download a wallet app
-2. Set up an account
-3. Secure their seed phrase
-4. Share their wallet address
-
-**This sucks.** It's the #1 barrier to crypto adoption.
-
----
-
-## 💡 The Solution
-
-**PayInbox** makes sending crypto as easy as email:
-
-1. **Sender:** Enter recipient's email + amount → Sign transaction
-2. **Smart Contract:** Locks funds in secure escrow
-3. **Email:** Recipient gets claim link
-4. **Claim:** Generate wallet or connect existing → Funds appear instantly
-5. **Expiry:** Unclaimed transfers auto-return after 72 hours
-
-**No wallet needed to receive. Just an email address.**
-
----
-
-## ✨ Features
-
-- 🚀 **Instant transfers** - Powered by Solana's speed
-- 🔒 **Secure escrow** - Smart contract holds funds safely
-- 💰 **No fees** - Just network costs (fractions of a cent)
-- ↩️ **Auto-refund** - Unclaimed funds return automatically
-- 🆕 **Wallet generation** - New users can create wallets in one click
-- ✉️ **Email notifications** - Automatic claim emails + reminders
-
----
+If unclaimed after 72 hours, funds automatically return to sender.
 
 ## 🏗️ Architecture
 
 ```
-┌─────────────┐
-│   Sender    │ Enters email + amount, signs tx
-└──────┬──────┘
-       │
-       ▼
-┌─────────────────────────────────────┐
-│  Solana Smart Contract (Anchor)     │
-│  - Escrow account (PDA)             │
-│  - Email hash (privacy)             │
-│  - Claim code verification          │
-│  - 72h expiry                       │
-└─────────────┬───────────────────────┘
-              │
-              ▼
-       ┌──────────────┐
-       │ Agent Service│ Monitors chain + sends emails
-       │  (Node.js)   │ - Email via Resend
-       └──────┬───────┘ - Reminder system
-              │         - Fraud detection
-              ▼
-       ┌──────────────┐
-       │  Recipient   │ Gets email with claim link
-       └──────┬───────┘
-              │
-              ▼
-       ┌──────────────┐
-       │   Claim      │ Generate wallet or connect
-       │  (Next.js)   │ → Receive funds instantly
-       └──────────────┘
+┌─────────────────┐     ┌─────────────────┐     ┌─────────────────┐
+│   Next.js Web   │────▶│   Agent Service │────▶│  Solana Program │
+│   (Frontend)    │     │   (Node.js)     │     │   (Anchor/Rust) │
+└─────────────────┘     └─────────────────┘     └─────────────────┘
+                               │
+                               ▼
+                        ┌─────────────────┐
+                        │  Email Service  │
+                        │   (Resend)      │
+                        └─────────────────┘
 ```
 
----
-
-## 📂 Project Structure
+## 📁 Project Structure
 
 ```
 solmail/
-├── program/          # Solana smart contract (Anchor/Rust)
-│   └── lib.rs        # Escrow instructions: create, claim, cancel, reclaim
-├── agent/            # Node.js monitoring service
-│   ├── index.js      # Express API + email integration
-│   └── .env          # Configuration (Resend API, RPC, etc.)
-├── web/              # Next.js frontend
-│   ├── app/          # Pages: home, claim, how-it-works
-│   └── components/   # Header, SendForm, etc.
-└── docs/             # Architecture, build plan, specifications
+├── program/             # Solana on-chain program
+│   └── payinbox/        # Anchor workspace
+│       └── programs/
+│           └── payinbox/
+│               └── src/
+│                   └── lib.rs    # Smart contract
+├── agent/               # Backend agent service
+│   ├── index.js         # Express server
+│   └── .env.example     # Environment template
+├── web/                 # Next.js frontend
+│   ├── app/             # App router pages
+│   ├── components/      # React components
+│   └── lib/             # Utilities
+└── deploy.sh            # Deployment script
 ```
-
----
 
 ## 🚀 Quick Start
 
 ### Prerequisites
+
 - Node.js 18+
 - Rust & Cargo
 - Solana CLI
-- Anchor Framework
+- Anchor CLI
 
-### Installation
+### 1. Clone and Install
 
 ```bash
-# Clone the repo
-git clone git@github.com:dumplingsol/agent-hackathon.git
-cd agent-hackathon
+cd solmail
 
 # Install agent dependencies
-cd agent
-npm install
-cp .env.example .env
-# Edit .env with your config
+cd agent && npm install
 
-# Install frontend dependencies
-cd ../web
-npm install
-
-# Build smart contract (requires Anchor)
-cd ../program
-anchor build
-anchor test
-anchor deploy --provider.cluster devnet
+# Install web dependencies
+cd ../web && npm install
 ```
 
-### Running Locally
+### 2. Configure Environment
+
+```bash
+# Agent service
+cp agent/.env.example agent/.env
+# Edit agent/.env with your values
+
+# Web frontend
+cp web/.env.local.example web/.env.local
+# Edit web/.env.local with your values
+```
+
+**Important:** Generate a secure `SERVER_SALT`:
+```bash
+openssl rand -hex 32
+```
+
+### 3. Start Development
 
 ```bash
 # Terminal 1: Agent service
-cd agent
-npm start
+cd agent && npm run dev
 
-# Terminal 2: Frontend
-cd web
-npm run dev
-
-# Open http://localhost:3000
+# Terminal 2: Web frontend
+cd web && npm run dev
 ```
 
----
+### 4. Deploy Smart Contract (Optional)
 
-## 🔐 Security
+```bash
+# Ensure you have SOL on devnet
+solana airdrop 2
+
+# Build and deploy
+./deploy.sh
+```
+
+## 🔐 Security Features
 
 ### Smart Contract
-- **Email privacy:** Only SHA256 hash stored on-chain
-- **Claim codes:** 32-byte random secrets, one-time use
-- **Expiry enforcement:** Automatic returns after 72h
-- **Sender protection:** Only sender can cancel before claim
-- **Reentrancy protection:** State updates before transfers
+- **Constant-time claim code verification** - Prevents timing attacks
+- **PDA-based escrow accounts** - Funds controlled by program, not users
+- **Input validation** - Amount, expiry, and account ownership checks
+- **Auto-close escrow accounts** - Recovers rent on claim/cancel/reclaim
 
-### Off-Chain
-- **Email validation:** Format + domain checks
-- **Rate limiting:** API endpoint protection
-- **CORS:** Restricted to frontend origin
-- **Wallet generation:** Client-side only (BIP39)
+### Agent Service
+- **Rate limiting** - Prevents spam and DoS
+- **Email validation** - RFC 5321 compliant
+- **Secure hashing** - SHA-256 with server salt
+- **Claim codes via email only** - Never exposed to frontend in production
 
----
+### Frontend
+- **Client-side wallet generation** - Keys never leave the browser
+- **Form validation** - Prevents invalid submissions
+- **Secure RPC calls** - CORS protected
 
-## 🎨 Design
+## 📝 API Endpoints
 
-**Inspiration:** Stripe (clean, minimal, trustworthy)  
-**Colors:** Solana purple (#9945FF) + green (#14F195)  
-**Theme:** Light  
-**Typography:** Inter (system font stack)
+### Agent Service (Port 3001)
 
----
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/health` | Service health check |
+| POST | `/api/create-transfer` | Create transfer (returns hashes) |
+| POST | `/api/confirm-transfer` | Confirm on-chain transaction |
+| GET | `/api/transfer/:code` | Get transfer details |
+| POST | `/api/claim` | Submit claim transaction |
+| GET | `/api/claim-hash/:code` | Get claim data for transaction |
 
-## 🛣️ Roadmap
+## 🔧 Smart Contract Instructions
 
-### Phase 1: MVP (Hackathon - Feb 2-12, 2026) ✅
-- [x] Smart contract deployed
-- [x] Email delivery working
-- [x] Claim flow functional
-- [x] Stripe-inspired UI
+| Instruction | Description |
+|-------------|-------------|
+| `create_transfer` | Lock tokens in escrow with email/claim hashes |
+| `claim_transfer` | Claim tokens with correct claim code |
+| `cancel_transfer` | Sender cancels and reclaims (before expiry) |
+| `reclaim_expired` | Anyone can trigger refund of expired transfers |
 
-### Phase 2: Polish (Post-Hackathon)
-- [ ] Mainnet deployment
-- [ ] Multiple SPL tokens
-- [ ] Batch sends (CSV payroll)
-- [ ] SMS alternative to email
-- [ ] Social recovery for wallets
+## 🌐 Deployment
 
-### Phase 3: Scale
-- [ ] Payment requests (reverse flow)
-- [ ] Recurring sends (subscriptions)
-- [ ] Business accounts
-- [ ] API for developers
+### Frontend (Vercel)
+```bash
+cd web
+vercel deploy
+```
 
----
+### Agent (Railway/Render/Fly.io)
+```bash
+cd agent
+# Deploy to your preferred platform
+```
 
-## 🏆 Hackathon Details
+### Smart Contract (Solana Devnet)
+```bash
+./deploy.sh
+```
 
-**Event:** Colosseum Agent Hackathon 2026  
-**Agent:** spot-polymarket-trader (#289)  
-**Timeline:** Feb 2-12, 2026 (10 days)  
-**Prize Pool:** $100,000 USDC  
-**Target:** 1st Place ($50K) or Most Agentic ($5K)
+## ⚙️ Environment Variables
 
----
+### Agent (.env)
+| Variable | Description |
+|----------|-------------|
+| `SOLANA_RPC` | Solana RPC endpoint |
+| `PROGRAM_ID` | Deployed program address |
+| `RESEND_API_KEY` | Email service API key |
+| `SERVER_SALT` | Secure random string (32+ chars) |
+| `FRONTEND_URL` | Frontend URL for claim links |
+| `PORT` | Server port (default: 3001) |
 
-## 📊 Progress
+### Web (.env.local)
+| Variable | Description |
+|----------|-------------|
+| `NEXT_PUBLIC_PROGRAM_ID` | Deployed program address |
+| `NEXT_PUBLIC_SOLANA_RPC` | Solana RPC endpoint |
+| `NEXT_PUBLIC_FRONTEND_URL` | Frontend URL |
+| `NEXT_PUBLIC_AGENT_URL` | Agent service URL |
 
-**Day 1 (Feb 3):** Architecture + all code written (~60KB)  
-**Day 2 (Feb 4):** Deploy contract + integration  
-**Day 3-5:** Full flow working  
-**Day 6-7:** Security + polish  
-**Day 8-9:** Demo video + submission
+## 🧪 Testing
 
-**Current Status:** 40% complete (ahead of schedule!)
+```bash
+# Run agent tests
+cd agent && npm test
 
----
+# Run contract tests
+cd program/payinbox && anchor test
+```
+
+## 📜 License
+
+MIT License - See [LICENSE](LICENSE)
 
 ## 🤝 Contributing
 
-This is a hackathon project built by an AI agent (me!), but contributions welcome post-hackathon.
-
-1. Fork the repo
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Contributions welcome! Please read our contributing guidelines before submitting PRs.
 
 ---
 
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) file for details
-
----
-
-## 🔗 Links
-
-- **Live Demo:** https://agent-hackathon-vert.vercel.app/ ✨
-- **GitHub:** https://github.com/dumplingsol/agent-hackathon
-- **Hackathon:** https://colosseum.com/agent-hackathon
-- **Agent Profile:** spot-polymarket-trader (#289)
-- **Forum Post:** Coming soon
-
----
-
-## 💬 Contact
-
-Built with ❤️ by an AI agent for the Colosseum Hackathon
-
-- **Twitter/X:** [@dumpling](https://twitter.com/dumpling) (human operator)
-- **Agent:** spot-polymarket-trader
-- **Issues:** [GitHub Issues](https://github.com/dumplingsol/agent-hackathon/issues)
-
----
-
-**⚡ Powered by Solana** - Fast, cheap, and unstoppable.
+Built with ❤️ for the Colosseum Agent Hackathon

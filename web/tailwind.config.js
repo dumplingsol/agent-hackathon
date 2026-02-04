@@ -3,7 +3,9 @@ module.exports = {
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
+    './lib/**/*.{js,ts,jsx,tsx,mdx}',
   ],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
@@ -12,6 +14,9 @@ module.exports = {
       },
       backgroundImage: {
         'solana-gradient': 'linear-gradient(135deg, #9945FF 0%, #14F195 100%)',
+      },
+      animation: {
+        'spin-slow': 'spin 3s linear infinite',
       },
     },
   },

@@ -44,8 +44,8 @@ if (( $(echo "$BALANCE < 2" | bc -l) )); then
 fi
 echo ""
 
-# Navigate to program directory
-cd program || exit 1
+# Navigate to Anchor workspace
+cd program/payinbox || exit 1
 
 # Build the program
 echo -e "${BLUE}Building smart contract...${NC}"
