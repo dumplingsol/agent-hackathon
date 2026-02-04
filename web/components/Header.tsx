@@ -6,7 +6,7 @@ import { ThemeToggle } from './ThemeToggle'
 
 export default function Header() {
   return (
-    <header className="border-b border-gray-200 dark:border-gray-800/30 bg-white/80 dark:bg-[#0A2540]/80 backdrop-blur-sm">
+    <header className="border-b border-gray-200 dark:border-[#1d2646] bg-white/80 dark:bg-[#0d1225] backdrop-blur-sm">
       <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2">

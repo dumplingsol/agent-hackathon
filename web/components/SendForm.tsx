@@ -80,14 +80,14 @@ export default function SendForm() {
 
   if (success) {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-2xl p-8 text-center">
+      <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-700/50 rounded-2xl p-8 text-center">
         <div className="text-4xl mb-4">✓</div>
         <h3 className="text-2xl font-bold mb-2">Transfer sent!</h3>
         <p className="text-gray-600 mb-6">
           An email has been sent to <strong>{email}</strong> with instructions to claim their funds.
         </p>
         
-        <div className="bg-white border border-gray-200 rounded-lg p-4 mb-6 font-mono text-sm break-all">
+        <div className="bg-white dark:bg-[#0d1225] border border-gray-200 dark:border-[#1d2646] rounded-lg p-4 mb-6 font-mono text-sm break-all">
           {claimLink}
         </div>
 
@@ -107,7 +107,7 @@ export default function SendForm() {
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white dark:bg-[#1A3B5D] border border-gray-200 dark:border-gray-700/50 rounded-2xl p-8 shadow-lg">
+    <form onSubmit={handleSubmit} className="bg-white dark:bg-[#1a1f3a] border border-gray-200 dark:border-[#1d2646] rounded-2xl p-8 shadow-lg">
       {/* Email Input */}
       <div className="mb-6">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
@@ -120,7 +120,7 @@ export default function SendForm() {
           onChange={(e) => setEmail(e.target.value)}
           placeholder="friend@example.com"
           required
-          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-[#0A2540] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-[#1d2646] dark:bg-[#0d1225] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition"
         />
       </div>
 
@@ -139,7 +139,7 @@ export default function SendForm() {
             step="0.01"
             min="0.01"
             required
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-[#0A2540] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition"
+            className="w-full px-4 py-3 border border-gray-300 dark:border-[#1d2646] dark:bg-[#0d1225] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition"
           />
         </div>
 
@@ -151,7 +151,7 @@ export default function SendForm() {
             id="token"
             value={token}
             onChange={(e) => setToken(e.target.value)}
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 dark:bg-[#0A2540] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition bg-white"
+            className="w-full px-4 py-3 border border-gray-300 dark:border-[#1d2646] dark:bg-[#0d1225] dark:text-white rounded-lg focus:ring-2 focus:ring-solana-purple focus:border-transparent outline-none transition bg-white"
           >
             <option value="USDC">USDC</option>
             <option value="SOL">SOL</option>
