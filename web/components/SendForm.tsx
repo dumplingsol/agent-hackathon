@@ -2,6 +2,7 @@
 
 import { useState, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { toast } from 'sonner';
 import { createTransfer, confirmTransfer } from '@/lib/api';
@@ -24,6 +25,7 @@ interface FormErrors {
 
 export default function SendForm() {
   const { publicKey, signTransaction, connected } = useWallet();
+  const { setVisible } = useWalletModal();
   const { connection } = useConnection();
 
   const [email, setEmail] = useState('');
@@ -65,6 +67,12 @@ export default function SendForm() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+
+    // If wallet not connected, open wallet modal
+    if (!connected) {
+      setVisible(true);
+      return;
+    }
 
     // Validate form
     if (!validateForm()) {
@@ -289,31 +297,10 @@ export default function SendForm() {
         </div>
       </div>
 
-      {/* Wallet Connection */}
-      {!connected && (
-        <div className="mb-6">
-          <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-              <div>
-                <p className="text-sm font-medium text-amber-800 dark:text-amber-200">
-                  Wallet not connected
-                </p>
-                <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
-                  Connect your wallet to send crypto via email.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={loading || !connected}
+        disabled={loading}
         className="w-full py-4 bg-solana-gradient text-white rounded-lg font-semibold text-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
         {loading ? (
