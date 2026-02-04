@@ -3,7 +3,6 @@
 import { useState, useCallback } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useConnection } from '@solana/wallet-adapter-react';
-import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
 import { toast } from 'sonner';
 import { createTransfer, confirmTransfer } from '@/lib/api';
 
@@ -305,9 +304,6 @@ export default function SendForm() {
                 <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
                   Connect your wallet to send crypto via email.
                 </p>
-                <div className="mt-3">
-                  <WalletMultiButton className="!bg-amber-600 hover:!bg-amber-700 !h-10 !text-sm" />
-                </div>
               </div>
             </div>
           </div>
