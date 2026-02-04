@@ -1,0 +1,32 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --solana-purple: #9945FF;
+  --solana-green: #14F195;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: 'JetBrains Mono', source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+/* Wallet Adapter overrides */
+.wallet-adapter-button {
+  background: linear-gradient(135deg, #9945FF 0%, #14F195 100%) !important;
+  transition: all 0.2s ease;
+}
+
+.wallet-adapter-button:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
