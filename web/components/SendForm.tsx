@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useWallet } from '@solana/wallet-adapter-react'
 import { useConnection } from '@solana/wallet-adapter-react'
+import { toast } from 'sonner'
 import { createTransfer } from '@/lib/api'
 
 export default function SendForm() {
@@ -22,14 +23,16 @@ export default function SendForm() {
     setError('')
     
     if (!publicKey) {
-      setError('Please connect your wallet first')
+      toast.error('Please connect your wallet first')
       return
     }
     
     setLoading(true)
+    const toastId = toast.loading('Preparing transaction...')
 
     try {
       // Step 1: Create transfer parameters
+      toast.loading('Creating transfer...', { id: toastId })
       const transferData = await createTransfer({
         email,
         amount: parseFloat(amount),
@@ -37,13 +40,25 @@ export default function SendForm() {
       })
       
       // Step 2: Build transaction (TODO: after contract deployed)
+      toast.loading('Waiting for wallet signature...', { id: toastId })
       // const transaction = await buildTransferTransaction(...)
       
       // Step 3: Sign transaction
       // if (signTransaction) {
-      //   const signed = await signTransaction(transaction)
-      //   const signature = await connection.sendRawTransaction(signed.serialize())
-      //   await connection.confirmTransaction(signature)
+      //   try {
+      //     const signed = await signTransaction(transaction)
+      //     toast.loading('Sending transaction...', { id: toastId })
+      //     const signature = await connection.sendRawTransaction(signed.serialize())
+      //     await connection.confirmTransaction(signature)
+      //   } catch (sigError: any) {
+      //     if (sigError.message?.includes('User rejected')) {
+      //       toast.error('Transaction canceled', { id: toastId })
+      //     } else {
+      //       toast.error('Wallet didn\'t sign', { id: toastId })
+      //     }
+      //     setLoading(false)
+      //     return
+      //   }
       // }
       
       // For now: simulate success
@@ -53,9 +68,12 @@ export default function SendForm() {
       setClaimLink(`${frontendUrl}/claim/${claimCode}`)
       setSuccess(true)
       setLoading(false)
+      toast.success('Sent! 🎉', { id: toastId })
     } catch (error: any) {
       console.error('Error:', error)
-      setError(error.message || 'Failed to create transfer')
+      const errorMsg = error.message || 'Failed to create transfer'
+      setError(errorMsg)
+      toast.error(`Error: ${errorMsg}`, { id: toastId })
       setLoading(false)
     }
   }
@@ -90,12 +108,6 @@ export default function SendForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg">
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
-          {error}
-        </div>
-      )}
-      
       {/* Email Input */}
       <div className="mb-6">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">

@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import './globals.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
 import { WalletContextProvider } from '@/lib/wallet'
+import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -21,6 +22,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <WalletContextProvider>
           {children}
+          <Toaster position="top-center" richColors />
         </WalletContextProvider>
       </body>
     </html>
