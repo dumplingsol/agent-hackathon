@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { WalletMultiButton } from '@solana/wallet-adapter-react-ui'
 
 export default function Header() {
   return (
@@ -21,9 +22,7 @@ export default function Header() {
             How it works
           </Link>
           
-          <button className="px-4 py-2 bg-solana-gradient text-white rounded-lg font-medium hover:opacity-90 transition">
-            Connect Wallet
-          </button>
+          <WalletMultiButton />
         </nav>
       </div>
     </header>

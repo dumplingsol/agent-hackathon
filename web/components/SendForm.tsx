@@ -1,31 +1,61 @@
 'use client'
 
 import { useState } from 'react'
+import { useWallet } from '@solana/wallet-adapter-react'
+import { useConnection } from '@solana/wallet-adapter-react'
+import { createTransfer } from '@/lib/api'
 
 export default function SendForm() {
+  const { publicKey, signTransaction } = useWallet()
+  const { connection } = useConnection()
+  
   const [email, setEmail] = useState('')
   const [amount, setAmount] = useState('')
   const [token, setToken] = useState('USDC')
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
   const [claimLink, setClaimLink] = useState('')
+  const [error, setError] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setError('')
+    
+    if (!publicKey) {
+      setError('Please connect your wallet first')
+      return
+    }
+    
     setLoading(true)
 
     try {
-      // TODO: Connect to agent service and sign transaction
-      console.log('Sending', { email, amount, token })
+      // Step 1: Create transfer parameters
+      const transferData = await createTransfer({
+        email,
+        amount: parseFloat(amount),
+        token: token as 'SOL' | 'USDC'
+      })
       
-      // Simulate success
-      setTimeout(() => {
-        setSuccess(true)
-        setClaimLink('https://solmail.vercel.app/claim/abc123xyz')
-        setLoading(false)
-      }, 2000)
-    } catch (error) {
+      // Step 2: Build transaction (TODO: after contract deployed)
+      // const transaction = await buildTransferTransaction(...)
+      
+      // Step 3: Sign transaction
+      // if (signTransaction) {
+      //   const signed = await signTransaction(transaction)
+      //   const signature = await connection.sendRawTransaction(signed.serialize())
+      //   await connection.confirmTransaction(signature)
+      // }
+      
+      // For now: simulate success
+      const claimCode = transferData.claimCode
+      const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000'
+      
+      setClaimLink(`${frontendUrl}/claim/${claimCode}`)
+      setSuccess(true)
+      setLoading(false)
+    } catch (error: any) {
       console.error('Error:', error)
+      setError(error.message || 'Failed to create transfer')
       setLoading(false)
     }
   }
@@ -48,6 +78,7 @@ export default function SendForm() {
             setSuccess(false)
             setEmail('')
             setAmount('')
+            setError('')
           }}
           className="text-solana-purple hover:underline"
         >
@@ -59,6 +90,12 @@ export default function SendForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white border border-gray-200 rounded-2xl p-8 shadow-lg">
+      {error && (
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg text-red-800">
+          {error}
+        </div>
+      )}
+      
       {/* Email Input */}
       <div className="mb-6">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-2">
@@ -110,13 +147,20 @@ export default function SendForm() {
         </div>
       </div>
 
+      {/* Wallet Status */}
+      {!publicKey && (
+        <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm text-yellow-800">
+          ⚠️ Connect your wallet to send transfers
+        </div>
+      )}
+
       {/* Submit Button */}
       <button
         type="submit"
-        disabled={loading}
+        disabled={loading || !publicKey}
         className="w-full py-4 bg-solana-gradient text-white rounded-lg font-semibold text-lg hover:opacity-90 transition disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? 'Sending...' : 'Send via Email'}
+        {loading ? 'Sending...' : !publicKey ? 'Connect Wallet First' : 'Send via Email'}
       </button>
 
       {/* Info Text */}
