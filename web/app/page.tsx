@@ -6,7 +6,7 @@ import SendForm from '@/components/SendForm'
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-white">
+    <main className="min-h-screen">
       <Header />
       
       {/* Hero Section */}
