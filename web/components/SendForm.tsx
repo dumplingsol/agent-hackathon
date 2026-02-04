@@ -6,17 +6,22 @@ import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useConnection } from '@solana/wallet-adapter-react';
 import { toast } from 'sonner';
 import { createTransfer, confirmTransfer } from '@/lib/api';
+import {
+  buildCreateTransferTx,
+  TOKEN_MINTS,
+  TOKEN_DECIMALS,
+  checkBalance,
+  TokenType,
+} from '@/lib/program';
 
 // Email validation regex (RFC 5322 simplified)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-// Supported tokens and their decimals
+// Supported tokens
 const TOKENS = {
   USDC: { name: 'USDC', decimals: 6, minAmount: 0.01 },
   SOL: { name: 'SOL', decimals: 9, minAmount: 0.001 },
 } as const;
-
-type TokenType = keyof typeof TOKENS;
 
 interface FormErrors {
   email?: string;
@@ -34,6 +39,7 @@ export default function SendForm() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [claimLink, setClaimLink] = useState('');
+  const [txSignature, setTxSignature] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
 
   // Validate form inputs
@@ -79,7 +85,7 @@ export default function SendForm() {
       return;
     }
 
-    if (!publicKey) {
+    if (!publicKey || !signTransaction) {
       toast.error('Please connect your wallet first');
       return;
     }
@@ -88,73 +94,89 @@ export default function SendForm() {
     const toastId = toast.loading('Preparing transfer...');
 
     try {
-      // Step 1: Create transfer with agent (get hashes)
+      const amountNum = parseFloat(amount);
+
+      // Step 1: Check balance
+      toast.loading('Checking balance...', { id: toastId });
+      const { sufficient, balance } = await checkBalance(
+        connection,
+        publicKey,
+        TOKEN_MINTS[token],
+        amountNum,
+        TOKEN_DECIMALS[token]
+      );
+
+      if (!sufficient) {
+        throw new Error(
+          `Insufficient ${token} balance. You have ${balance.toFixed(4)} ${token}, need ${amountNum} ${token}`
+        );
+      }
+
+      // Step 2: Create transfer with agent (get hashes)
       toast.loading('Creating transfer...', { id: toastId });
       const transferData = await createTransfer({
         email: email.trim().toLowerCase(),
-        amount: parseFloat(amount),
+        amount: amountNum,
         token,
         senderPublicKey: publicKey.toBase58(),
       });
 
-      // Step 2: Build on-chain transaction
-      // TODO: Implement actual transaction building when program is deployed
-      toast.loading('Building transaction...', { id: toastId });
-
-      /*
-      // Example transaction building (uncomment when program is deployed):
+      // Convert hash arrays to Uint8Array
       const emailHashArray = new Uint8Array(transferData.emailHash);
       const claimCodeHashArray = new Uint8Array(transferData.claimCodeHash);
-      
-      const [transferPDA] = PublicKey.findProgramAddressSync(
-        [Buffer.from('transfer'), publicKey.toBuffer(), emailHashArray],
-        PROGRAM_ID
-      );
-      
-      const transaction = new Transaction().add(
-        await program.methods
-          .createTransfer(
-            Array.from(emailHashArray),
-            Array.from(claimCodeHashArray),
-            new BN(parseFloat(amount) * Math.pow(10, TOKENS[token].decimals)),
-            new BN(72) // 72 hours expiry
-          )
-          .accounts({
-            transfer: transferPDA,
-            sender: publicKey,
-            senderTokenAccount: senderATA,
-            tokenMint: TOKEN_MINTS[token],
-            escrowTokenAccount: escrowATA,
-            tokenProgram: TOKEN_PROGRAM_ID,
-            systemProgram: SystemProgram.programId,
-            rent: SYSVAR_RENT_PUBKEY,
-          })
-          .instruction()
+
+      // Step 3: Build on-chain transaction
+      toast.loading('Building transaction...', { id: toastId });
+      const { transaction, transferPDA } = await buildCreateTransferTx(
+        connection,
+        publicKey,
+        emailHashArray,
+        claimCodeHashArray,
+        amountNum,
+        token,
+        72 // 72 hours expiry
       );
 
-      // Step 3: Sign transaction
+      // Step 4: Sign transaction
       toast.loading('Waiting for wallet signature...', { id: toastId });
-      if (signTransaction) {
-        const signed = await signTransaction(transaction);
-        toast.loading('Sending transaction...', { id: toastId });
-        const signature = await connection.sendRawTransaction(signed.serialize());
-        await connection.confirmTransaction(signature);
-        
-        // Step 4: Confirm with agent
-        await confirmTransfer(transferData.claimCode, signature, transferPDA.toBase58());
-      }
-      */
+      const signed = await signTransaction(transaction);
 
-      // For MVP demo: simulate success with the claim code from development mode
-      const claimCode = transferData.claimCode;
-      if (!claimCode) {
-        throw new Error('No claim code received (requires dev mode or on-chain transaction)');
+      // Step 5: Send transaction
+      toast.loading('Sending transaction...', { id: toastId });
+      const signature = await connection.sendRawTransaction(signed.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+      });
+
+      // Step 6: Confirm transaction
+      toast.loading('Confirming transaction...', { id: toastId });
+      const confirmation = await connection.confirmTransaction(
+        {
+          signature,
+          blockhash: transaction.recentBlockhash!,
+          lastValidBlockHeight: transaction.lastValidBlockHeight!,
+        },
+        'confirmed'
+      );
+
+      if (confirmation.value.err) {
+        throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
       }
 
+      // Step 7: Confirm with agent
+      toast.loading('Finalizing...', { id: toastId });
+      await confirmTransfer(
+        transferData.claimCode!,
+        signature,
+        transferPDA.toBase58()
+      );
+
+      // Success!
       const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || window.location.origin;
-      setClaimLink(`${frontendUrl}/claim/${claimCode}`);
+      setClaimLink(`${frontendUrl}/claim/${transferData.claimCode}`);
+      setTxSignature(signature);
       setSuccess(true);
-      toast.success('Transfer created! 🎉', { id: toastId });
+      toast.success('Transfer created on-chain! 🎉', { id: toastId });
 
     } catch (error: unknown) {
       console.error('Transfer error:', error);
@@ -163,6 +185,10 @@ export default function SendForm() {
       if (error instanceof Error) {
         if (error.message.includes('User rejected')) {
           errorMsg = 'Transaction cancelled by user';
+        } else if (error.message.includes('Insufficient')) {
+          errorMsg = error.message;
+        } else if (error.message.includes('0x1')) {
+          errorMsg = 'Insufficient SOL for transaction fees';
         } else {
           errorMsg = error.message;
         }
@@ -180,6 +206,7 @@ export default function SendForm() {
     setAmount('');
     setErrors({});
     setClaimLink('');
+    setTxSignature('');
   };
 
   // Success state
@@ -197,6 +224,20 @@ export default function SendForm() {
           An email has been sent to <strong className="text-gray-800 dark:text-white">{email}</strong> with
           instructions to claim their funds.
         </p>
+
+        {txSignature && (
+          <div className="bg-white dark:bg-[#0d1225] border border-gray-200 dark:border-[#1d2646] rounded-lg p-4 mb-4">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Transaction Signature</p>
+            <a
+              href={`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm break-all text-solana-purple hover:underline"
+            >
+              {txSignature.slice(0, 20)}...{txSignature.slice(-20)}
+            </a>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-[#0d1225] border border-gray-200 dark:border-[#1d2646] rounded-lg p-4 mb-6">
           <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Claim Link (for testing)</p>
@@ -323,6 +364,11 @@ export default function SendForm() {
         Recipient will receive an email with a link to claim.
         <br />
         Expires in 72 hours if unclaimed.
+      </p>
+
+      {/* Network notice */}
+      <p className="text-xs text-amber-600 dark:text-amber-400 text-center mt-2">
+        ⚠️ Running on Solana Devnet - use test tokens only
       </p>
     </form>
   );

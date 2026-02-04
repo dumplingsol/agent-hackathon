@@ -26,17 +26,22 @@ export interface CreateTransferResponse {
 
 export interface TransferDetails {
   amount: number;
-  token: string;
+  token: 'SOL' | 'USDC';
   sender: string;
   expiresAt: string;
   claimed: boolean;
   expired: boolean;
   transferPubkey: string | null;
+  emailHash: number[];
+  tokenMint?: string;
 }
 
 export interface ClaimHashResponse {
   claimCode: string;
   transferPubkey: string | null;
+  sender: string;
+  emailHash: number[];
+  tokenMint: string;
 }
 
 export interface ApiError {

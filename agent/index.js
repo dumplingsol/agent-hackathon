@@ -335,7 +335,13 @@ app.get('/api/transfer/:claimCode', async (req, res) => {
     // Check if expired
     const isExpired = new Date(transfer.expiresAt) < new Date();
     
-    // Return public info only (never expose email hash or claim code hash)
+    // Get token mint address
+    const tokenMints = {
+      USDC: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
+      SOL: 'So11111111111111111111111111111111111111112',
+    };
+    
+    // Return transfer info including emailHash for PDA derivation
     res.json({
       amount: transfer.amount,
       token: transfer.token,
@@ -344,6 +350,8 @@ app.get('/api/transfer/:claimCode', async (req, res) => {
       claimed: transfer.claimed,
       expired: isExpired,
       transferPubkey: transfer.transferPubkey,
+      emailHash: transfer.emailHash,
+      tokenMint: tokenMints[transfer.token] || tokenMints.USDC,
     });
     
   } catch (error) {
@@ -419,8 +427,8 @@ app.post('/api/claim', strictLimiter, async (req, res) => {
 });
 
 /**
- * Get claim code hash for frontend transaction building
- * This is safe because it only returns the hash, not the claim code
+ * Get claim data for frontend transaction building
+ * Returns all info needed to build the claim transaction
  */
 app.get('/api/claim-hash/:claimCode', async (req, res) => {
   try {
@@ -439,11 +447,19 @@ app.get('/api/claim-hash/:claimCode', async (req, res) => {
       return res.status(400).json({ error: 'Transfer already claimed' });
     }
 
-    // Return the raw claim code (needed for on-chain verification)
-    // This is intentional - the recipient needs to submit this to the contract
+    // Get token mint address
+    const tokenMints = {
+      USDC: '4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU',
+      SOL: 'So11111111111111111111111111111111111111112',
+    };
+
+    // Return all data needed for claim transaction
     res.json({
       claimCode,
       transferPubkey: transfer.transferPubkey,
+      sender: transfer.sender,
+      emailHash: transfer.emailHash,
+      tokenMint: tokenMints[transfer.token] || tokenMints.USDC,
     });
     
   } catch (error) {

@@ -3,11 +3,14 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { useWallet } from '@solana/wallet-adapter-react';
+import { useConnection } from '@solana/wallet-adapter-react';
 import { WalletMultiButton } from '@solana/wallet-adapter-react-ui';
+import { PublicKey, Transaction } from '@solana/web3.js';
 import { toast } from 'sonner';
 import Header from '@/components/Header';
 import { getTransfer, getClaimData, submitClaim, TransferDetails } from '@/lib/api';
 import { generateWallet, formatPublicKey, GeneratedWallet } from '@/lib/wallet-gen';
+import { getTransferPDA, buildClaimTransferTx } from '@/lib/program';
 
 type ClaimMethod = 'connect' | 'generate' | null;
 type PageState = 'loading' | 'error' | 'ready' | 'claiming' | 'claimed';
@@ -15,7 +18,8 @@ type PageState = 'loading' | 'error' | 'ready' | 'claiming' | 'claimed';
 export default function ClaimPage() {
   const params = useParams();
   const code = params?.code as string;
-  const { publicKey, connected } = useWallet();
+  const { publicKey, signTransaction, connected } = useWallet();
+  const { connection } = useConnection();
 
   const [pageState, setPageState] = useState<PageState>('loading');
   const [transfer, setTransfer] = useState<TransferDetails | null>(null);
@@ -24,6 +28,7 @@ export default function ClaimPage() {
   const [generatedWallet, setGeneratedWallet] = useState<GeneratedWallet | null>(null);
   const [savedMnemonic, setSavedMnemonic] = useState(false);
   const [recipientAddress, setRecipientAddress] = useState('');
+  const [txSignature, setTxSignature] = useState('');
 
   // Load transfer details
   useEffect(() => {
@@ -84,54 +89,97 @@ export default function ClaimPage() {
 
     try {
       // Get claim data from agent
+      toast.loading('Getting claim data...', { id: toastId });
       const claimData = await getClaimData(code);
 
-      // TODO: Build and sign the actual claim transaction
-      // For now, simulate success
-      /*
-      const [transferPDA] = PublicKey.findProgramAddressSync(
-        [Buffer.from('transfer'), senderPublicKey.toBuffer(), emailHash],
-        PROGRAM_ID
-      );
-
-      const transaction = new Transaction().add(
-        await program.methods
-          .claimTransfer(claimData.claimCode)
-          .accounts({
-            transfer: transferPDA,
-            recipient: recipientPublicKey,
-            recipientTokenAccount: recipientATA,
-            escrowTokenAccount: escrowATA,
-            sender: senderPublicKey,
-            tokenProgram: TOKEN_PROGRAM_ID,
-          })
-          .instruction()
-      );
-
-      // Sign with connected wallet or generated keypair
-      let signature: string;
-      if (claimMethod === 'connect' && signTransaction) {
-        const signed = await signTransaction(transaction);
-        signature = await connection.sendRawTransaction(signed.serialize());
-      } else if (generatedWallet) {
-        transaction.sign(generatedWallet.keypair);
-        signature = await connection.sendRawTransaction(transaction.serialize());
+      if (!claimData.sender || !claimData.emailHash || !claimData.tokenMint) {
+        throw new Error('Invalid claim data received from server');
       }
 
-      await connection.confirmTransaction(signature);
+      // Derive the transfer PDA
+      const senderPubkey = new PublicKey(claimData.sender);
+      const emailHashArray = new Uint8Array(claimData.emailHash);
+      const [transferPDA] = getTransferPDA(senderPubkey, emailHashArray);
+      const tokenMint = new PublicKey(claimData.tokenMint);
+      const recipientPubkey = new PublicKey(recipient);
+
+      // Build the claim transaction
+      toast.loading('Building transaction...', { id: toastId });
+      const transaction = await buildClaimTransferTx(
+        connection,
+        recipientPubkey,
+        transferPDA,
+        claimData.claimCode,
+        senderPubkey,
+        tokenMint
+      );
+
+      // Sign the transaction
+      toast.loading('Signing transaction...', { id: toastId });
+      let signedTx: Transaction;
+
+      if (claimMethod === 'connect' && signTransaction) {
+        // Sign with connected wallet
+        signedTx = await signTransaction(transaction);
+      } else if (generatedWallet) {
+        // Sign with generated keypair
+        transaction.partialSign(generatedWallet.keypair);
+        signedTx = transaction;
+      } else {
+        throw new Error('No wallet available to sign transaction');
+      }
+
+      // Send the transaction
+      toast.loading('Sending transaction...', { id: toastId });
+      const signature = await connection.sendRawTransaction(signedTx.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+      });
+
+      // Confirm the transaction
+      toast.loading('Confirming transaction...', { id: toastId });
+      const confirmation = await connection.confirmTransaction(
+        {
+          signature,
+          blockhash: transaction.recentBlockhash!,
+          lastValidBlockHeight: transaction.lastValidBlockHeight!,
+        },
+        'confirmed'
+      );
+
+      if (confirmation.value.err) {
+        throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
+      }
+
+      // Report success to agent
+      toast.loading('Finalizing...', { id: toastId });
       await submitClaim(code, signature, recipient);
-      */
 
-      // Simulate success for demo
-      await new Promise((resolve) => setTimeout(resolve, 1500));
-      await submitClaim(code, 'simulated_signature_' + Date.now(), recipient);
-
+      setTxSignature(signature);
       setPageState('claimed');
       toast.success('Funds claimed successfully! 🎉', { id: toastId });
     } catch (err) {
       console.error('Claim error:', err);
       setPageState('ready');
-      toast.error(err instanceof Error ? err.message : 'Failed to claim funds', { id: toastId });
+      
+      let errorMsg = 'Failed to claim funds';
+      if (err instanceof Error) {
+        if (err.message.includes('User rejected')) {
+          errorMsg = 'Transaction cancelled by user';
+        } else if (err.message.includes('InvalidClaimCode') || err.message.includes('0x1770')) {
+          errorMsg = 'Invalid claim code - the link may be expired or already used';
+        } else if (err.message.includes('TransferExpired') || err.message.includes('0x1772')) {
+          errorMsg = 'This transfer has expired';
+        } else if (err.message.includes('already been claimed') || err.message.includes('0x1773')) {
+          errorMsg = 'This transfer has already been claimed';
+        } else if (err.message.includes('0x1')) {
+          errorMsg = 'Insufficient SOL for transaction fees';
+        } else {
+          errorMsg = err.message;
+        }
+      }
+      
+      toast.error(errorMsg, { id: toastId });
     }
   };
 
@@ -199,6 +247,20 @@ export default function ClaimPage() {
             {transfer?.amount} {transfer?.token} has been sent to your wallet
           </p>
 
+          {txSignature && (
+            <div className="bg-gray-100 dark:bg-[#1a1f3a] rounded-lg p-4 mb-6 inline-block">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Transaction</p>
+              <a
+                href={`https://explorer.solana.com/tx/${txSignature}?cluster=devnet`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-solana-purple hover:underline font-mono text-sm"
+              >
+                View on Solana Explorer →
+              </a>
+            </div>
+          )}
+
           <div className="bg-gray-100 dark:bg-[#1a1f3a] rounded-lg p-4 inline-block">
             <p className="text-sm text-gray-600 dark:text-gray-400 mb-1">Recipient wallet</p>
             <p className="font-mono text-gray-800 dark:text-white">
@@ -243,6 +305,13 @@ export default function ClaimPage() {
           </p>
           <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">
             {getTimeRemaining()}
+          </p>
+        </div>
+
+        {/* Network notice */}
+        <div className="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg p-3 mb-6 text-center">
+          <p className="text-sm text-amber-700 dark:text-amber-300">
+            ⚠️ This is on Solana Devnet - test tokens only
           </p>
         </div>
 

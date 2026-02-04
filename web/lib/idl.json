@@ -1,0 +1,932 @@
+{
+  "address": "14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h",
+  "metadata": {
+    "name": "solmail",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Send crypto via email - no wallet required"
+  },
+  "instructions": [
+    {
+      "name": "cancel_transfer",
+      "docs": [
+        "Cancel an active transfer (sender only).",
+        "",
+        "Returns escrowed tokens to the sender. Can be called at any time",
+        "before the transfer is claimed, even if not expired.",
+        "",
+        "# Authorization",
+        "Only the original sender can cancel.",
+        "",
+        "# Errors",
+        "* `Unauthorized` - Caller is not the sender",
+        "* `AlreadyClaimed` / `AlreadyRefunded` - Invalid state"
+      ],
+      "discriminator": [
+        50,
+        32,
+        70,
+        130,
+        142,
+        41,
+        111,
+        175
+      ],
+      "accounts": [
+        {
+          "name": "transfer",
+          "docs": [
+            "The transfer escrow state account."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "transfer.sender",
+                "account": "TransferAccount"
+              },
+              {
+                "kind": "account",
+                "path": "transfer.email_hash",
+                "account": "TransferAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sender",
+          "docs": [
+            "The original sender (must sign, only they can cancel)."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_token_account",
+          "docs": [
+            "Sender's token account to receive refund."
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_token_account",
+          "docs": [
+            "Escrow token account to close."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "transfer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "claim_transfer",
+      "docs": [
+        "Claim a transfer using the secret claim code.",
+        "",
+        "Verifies the claim code against the stored hash and transfers",
+        "the escrowed tokens to the recipient's token account.",
+        "",
+        "# Arguments",
+        "* `claim_code` - The plaintext secret claim code",
+        "",
+        "# Security",
+        "- Uses constant-time comparison to prevent timing attacks",
+        "- Claim code is hashed immediately, never stored in plaintext",
+        "",
+        "# Errors",
+        "* `ClaimCodeTooLong` - Code exceeds 256 bytes",
+        "* `InvalidClaimCode` - Hash doesn't match",
+        "* `TransferExpired` - Past expiry timestamp",
+        "* `AlreadyClaimed` / `AlreadyRefunded` - Invalid state"
+      ],
+      "discriminator": [
+        202,
+        178,
+        58,
+        190,
+        230,
+        234,
+        229,
+        17
+      ],
+      "accounts": [
+        {
+          "name": "transfer",
+          "docs": [
+            "The transfer escrow state account."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "transfer.sender",
+                "account": "TransferAccount"
+              },
+              {
+                "kind": "account",
+                "path": "transfer.email_hash",
+                "account": "TransferAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "recipient",
+          "docs": [
+            "The recipient claiming the transfer (must sign)."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "recipient_token_account",
+          "docs": [
+            "Recipient's token account (must match transfer's token mint)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_token_account",
+          "docs": [
+            "Escrow token account holding the escrowed tokens."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "transfer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sender",
+          "docs": [
+            "Original sender (receives rent from closed escrow)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": [
+        {
+          "name": "claim_code",
+          "type": "string"
+        }
+      ]
+    },
+    {
+      "name": "create_transfer",
+      "docs": [
+        "Create a new token transfer escrow.",
+        "",
+        "Locks the specified amount of tokens in a PDA-controlled escrow account.",
+        "The recipient can claim using the secret claim code sent to their email.",
+        "",
+        "# Arguments",
+        "* `email_hash` - SHA256(salt + email) to identify the recipient",
+        "* `claim_code_hash` - SHA256(claim_code) for verification",
+        "* `amount` - Number of token base units to transfer",
+        "* `expiry_hours` - Hours until transfer expires (1-168)",
+        "",
+        "# Errors",
+        "* `InvalidAmount` - Amount is zero",
+        "* `InvalidExpiry` - Expiry not in valid range (1-168 hours)",
+        "* `InsufficientFunds` - Sender doesn't have enough tokens"
+      ],
+      "discriminator": [
+        142,
+        232,
+        86,
+        212,
+        85,
+        158,
+        131,
+        190
+      ],
+      "accounts": [
+        {
+          "name": "transfer",
+          "docs": [
+            "The transfer escrow state account (PDA).",
+            "Seeds: [\"transfer\", sender, email_hash]"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "sender"
+              },
+              {
+                "kind": "arg",
+                "path": "email_hash"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sender",
+          "docs": [
+            "The sender creating and funding the transfer."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "sender_token_account",
+          "docs": [
+            "Sender's token account holding the tokens to transfer."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_mint",
+          "docs": [
+            "The SPL token mint being transferred."
+          ]
+        },
+        {
+          "name": "escrow_token_account",
+          "docs": [
+            "Escrow token account (PDA-controlled).",
+            "Seeds: [\"escrow\", transfer_pda]"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "transfer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        },
+        {
+          "name": "system_program",
+          "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "rent",
+          "address": "SysvarRent111111111111111111111111111111111"
+        }
+      ],
+      "args": [
+        {
+          "name": "email_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "claim_code_hash",
+          "type": {
+            "array": [
+              "u8",
+              32
+            ]
+          }
+        },
+        {
+          "name": "amount",
+          "type": "u64"
+        },
+        {
+          "name": "expiry_hours",
+          "type": "i64"
+        }
+      ]
+    },
+    {
+      "name": "reclaim_expired",
+      "docs": [
+        "Reclaim an expired transfer.",
+        "",
+        "Anyone can call this to help clean up expired transfers and return",
+        "funds to the original sender. This enables permissionless cleanup",
+        "which improves network efficiency.",
+        "",
+        "# Notes",
+        "- Funds always return to the original sender",
+        "- Rent is recovered to the original sender",
+        "- Caller receives no reward (altruistic cleanup)",
+        "",
+        "# Errors",
+        "* `NotExpired` - Transfer hasn't expired yet",
+        "* `AlreadyClaimed` / `AlreadyRefunded` - Invalid state"
+      ],
+      "discriminator": [
+        125,
+        185,
+        48,
+        75,
+        0,
+        71,
+        93,
+        98
+      ],
+      "accounts": [
+        {
+          "name": "transfer",
+          "docs": [
+            "The transfer escrow state account."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  116,
+                  114,
+                  97,
+                  110,
+                  115,
+                  102,
+                  101,
+                  114
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "transfer.sender",
+                "account": "TransferAccount"
+              },
+              {
+                "kind": "account",
+                "path": "transfer.email_hash",
+                "account": "TransferAccount"
+              }
+            ]
+          }
+        },
+        {
+          "name": "sender_token_account",
+          "docs": [
+            "Original sender's token account (receives the refund)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "escrow_token_account",
+          "docs": [
+            "Escrow token account to close."
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  101,
+                  115,
+                  99,
+                  114,
+                  111,
+                  119
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "transfer"
+              }
+            ]
+          }
+        },
+        {
+          "name": "original_sender",
+          "docs": [
+            "Original sender (receives rent from closed accounts)."
+          ],
+          "writable": true
+        },
+        {
+          "name": "token_program",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+        }
+      ],
+      "args": []
+    }
+  ],
+  "accounts": [
+    {
+      "name": "TransferAccount",
+      "discriminator": [
+        166,
+        217,
+        148,
+        252,
+        107,
+        104,
+        0,
+        90
+      ]
+    }
+  ],
+  "events": [
+    {
+      "name": "TransferCancelled",
+      "discriminator": [
+        117,
+        98,
+        70,
+        151,
+        137,
+        80,
+        144,
+        86
+      ]
+    },
+    {
+      "name": "TransferClaimed",
+      "discriminator": [
+        145,
+        226,
+        18,
+        63,
+        217,
+        2,
+        35,
+        236
+      ]
+    },
+    {
+      "name": "TransferCreated",
+      "discriminator": [
+        26,
+        150,
+        222,
+        191,
+        158,
+        158,
+        186,
+        179
+      ]
+    },
+    {
+      "name": "TransferReclaimed",
+      "discriminator": [
+        32,
+        224,
+        202,
+        198,
+        59,
+        193,
+        240,
+        40
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "InvalidClaimCode",
+      "msg": "Invalid claim code"
+    },
+    {
+      "code": 6001,
+      "name": "ClaimCodeTooLong",
+      "msg": "Claim code exceeds maximum length of 256 bytes"
+    },
+    {
+      "code": 6002,
+      "name": "TransferExpired",
+      "msg": "Transfer has expired and can no longer be claimed"
+    },
+    {
+      "code": 6003,
+      "name": "AlreadyClaimed",
+      "msg": "Transfer has already been claimed"
+    },
+    {
+      "code": 6004,
+      "name": "AlreadyRefunded",
+      "msg": "Transfer has already been refunded"
+    },
+    {
+      "code": 6005,
+      "name": "NotExpired",
+      "msg": "Transfer has not expired yet"
+    },
+    {
+      "code": 6006,
+      "name": "Unauthorized",
+      "msg": "Unauthorized: only the original sender can perform this action"
+    },
+    {
+      "code": 6007,
+      "name": "InvalidAmount",
+      "msg": "Invalid amount: must be greater than zero"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidExpiry",
+      "msg": "Invalid expiry: must be between 1 and 168 hours (7 days)"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidTokenAccount",
+      "msg": "Invalid token account: ownership mismatch"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidTokenMint",
+      "msg": "Token mint mismatch: expected different token type"
+    },
+    {
+      "code": 6011,
+      "name": "InsufficientFunds",
+      "msg": "Insufficient funds in source token account"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidEscrowAccount",
+      "msg": "Invalid escrow account: address mismatch"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidSender",
+      "msg": "Invalid sender account: address mismatch"
+    },
+    {
+      "code": 6014,
+      "name": "Overflow",
+      "msg": "Arithmetic overflow in calculation"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidTransferState",
+      "msg": "Invalid transfer state for this operation"
+    }
+  ],
+  "types": [
+    {
+      "name": "TransferAccount",
+      "docs": [
+        "State account for a pending token transfer.",
+        "",
+        "This account stores all metadata about an escrow transfer,",
+        "including the claim code hash for verification and the",
+        "expiry timestamp."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "sender",
+            "docs": [
+              "The sender who created and funded this transfer"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "email_hash",
+            "docs": [
+              "SHA256 hash of (salt + recipient_email)"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "claim_code_hash",
+            "docs": [
+              "SHA256 hash of the claim code"
+            ],
+            "type": {
+              "array": [
+                "u8",
+                32
+              ]
+            }
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Amount of tokens held in escrow"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "token_mint",
+            "docs": [
+              "SPL token mint address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "escrow_token_account",
+            "docs": [
+              "Address of the escrow token account"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "created_at",
+            "docs": [
+              "Unix timestamp when transfer was created"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "expiry",
+            "docs": [
+              "Unix timestamp when transfer expires"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "status",
+            "docs": [
+              "Current status of the transfer"
+            ],
+            "type": {
+              "defined": {
+                "name": "TransferStatus"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "docs": [
+              "PDA bump seed for this transfer account"
+            ],
+            "type": "u8"
+          },
+          {
+            "name": "escrow_bump",
+            "docs": [
+              "PDA bump seed for the escrow token account"
+            ],
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferCancelled",
+      "docs": [
+        "Emitted when a transfer is cancelled by the sender."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transfer",
+            "docs": [
+              "The transfer PDA address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "sender",
+            "docs": [
+              "The sender who cancelled"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Amount of tokens refunded"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferClaimed",
+      "docs": [
+        "Emitted when a transfer is successfully claimed."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transfer",
+            "docs": [
+              "The transfer PDA address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "recipient",
+            "docs": [
+              "The recipient who claimed the transfer"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Amount of tokens received"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferCreated",
+      "docs": [
+        "Emitted when a new transfer escrow is created."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transfer",
+            "docs": [
+              "The transfer PDA address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "sender",
+            "docs": [
+              "The sender who created this transfer"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "token_mint",
+            "docs": [
+              "The token mint being transferred"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Amount of tokens escrowed"
+            ],
+            "type": "u64"
+          },
+          {
+            "name": "expiry",
+            "docs": [
+              "Unix timestamp when this transfer expires"
+            ],
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferReclaimed",
+      "docs": [
+        "Emitted when an expired transfer is reclaimed."
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "transfer",
+            "docs": [
+              "The transfer PDA address"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "sender",
+            "docs": [
+              "The original sender who received the refund"
+            ],
+            "type": "pubkey"
+          },
+          {
+            "name": "amount",
+            "docs": [
+              "Amount of tokens refunded"
+            ],
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "TransferStatus",
+      "docs": [
+        "Transfer status enum - more gas efficient than multiple booleans"
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "Active"
+          },
+          {
+            "name": "Claimed"
+          },
+          {
+            "name": "Cancelled"
+          },
+          {
+            "name": "Expired"
+          }
+        ]
+      }
+    }
+  ]
+}

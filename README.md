@@ -149,21 +149,53 @@ solana airdrop 2
 
 ## 🌐 Deployment
 
+### Current Deployment (Devnet)
+
+**Program ID:** `14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h`
+
 ### Frontend (Vercel)
+
+1. Push your code to GitHub
+2. Connect the repo to Vercel
+3. Set the root directory to `web`
+4. Add environment variables:
+   - `NEXT_PUBLIC_PROGRAM_ID=14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h`
+   - `NEXT_PUBLIC_SOLANA_RPC=https://api.devnet.solana.com`
+   - `NEXT_PUBLIC_FRONTEND_URL=https://your-app.vercel.app`
+   - `NEXT_PUBLIC_AGENT_URL=https://your-agent.railway.app` (or your agent URL)
+5. Deploy!
+
 ```bash
 cd web
 vercel deploy
 ```
 
 ### Agent (Railway/Render/Fly.io)
-```bash
-cd agent
-# Deploy to your preferred platform
-```
+
+1. Create a new project on your preferred platform
+2. Set environment variables from `.env.example`
+3. **Important:** Generate a secure `SERVER_SALT`:
+   ```bash
+   openssl rand -hex 32
+   ```
+4. Set up a Resend account for email delivery
+5. Deploy!
 
 ### Smart Contract (Solana Devnet)
 ```bash
 ./deploy.sh
+```
+
+### Local Development
+
+```bash
+# Terminal 1: Start agent
+cd agent && npm run dev
+
+# Terminal 2: Start web
+cd web && npm run dev
+
+# Open http://localhost:3000
 ```
 
 ## ⚙️ Environment Variables
