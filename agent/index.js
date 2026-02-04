@@ -1,10 +1,46 @@
 require('dotenv').config();
 const express = require('express');
+const cors = require('cors');
+const rateLimit = require('express-rate-limit');
 const { Connection, PublicKey } = require('@solana/web3.js');
 const { Resend } = require('resend');
 
 const app = express();
+
+// CORS - allow frontend domain
+const allowedOrigins = [
+  'http://localhost:3000',
+  'https://agent-hackathon-vert.vercel.app',
+  process.env.FRONTEND_URL
+].filter(Boolean);
+
+app.use(cors({
+  origin: (origin, callback) => {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true
+}));
+
 app.use(express.json());
+
+// Rate limiting
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per windowMs
+  message: { error: 'Too many requests, please try again later.' }
+});
+
+const strictLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // Limit each IP to 10 requests per minute
+  message: { error: 'Rate limit exceeded. Please slow down.' }
+});
+
+app.use('/api/', apiLimiter);
 
 // Configuration
 const PORT = process.env.PORT || 3001;
@@ -35,7 +71,7 @@ app.get('/health', (req, res) => {
  * Create transfer helper endpoint
  * Frontend calls this before signing transaction
  */
-app.post('/api/create-transfer', async (req, res) => {
+app.post('/api/create-transfer', strictLimiter, async (req, res) => {
   try {
     const { email, amount, token } = req.body;
 
