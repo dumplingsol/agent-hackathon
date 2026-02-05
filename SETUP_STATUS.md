@@ -13,8 +13,7 @@
 
 ### 2. Resend API Key
 - ✓ Signed up for Resend
-- ✓ API key obtained: `re_Z2iJHMvp_BRfZctn5tYFfNCFKhC25Fpj9`
-- ✓ Saved to `agent/.env`
+- ✓ API key obtained and saved to `agent/.env`
 - **Status:** Email service ready!
 
 ### 3. Rust Installation
