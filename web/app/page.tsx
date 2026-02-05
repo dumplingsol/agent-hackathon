@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Header from '@/components/Header'
 import SendForm from '@/components/SendForm'
+import TransferHistory from '@/components/TransferHistory'
 
 export default function Home() {
   return (
@@ -24,6 +25,9 @@ export default function Home() {
         {/* Send Form */}
         <div className="max-w-lg mx-auto">
           <SendForm />
+          
+          {/* Transfer History */}
+          <TransferHistory />
         </div>
       </section>
 

@@ -1,18 +1,24 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useWallet } from '@solana/wallet-adapter-react';
 import { useWalletModal } from '@solana/wallet-adapter-react-ui';
 import { useConnection } from '@solana/wallet-adapter-react';
+import { PublicKey } from '@solana/web3.js';
 import { toast } from 'sonner';
 import { createTransfer, confirmTransfer } from '@/lib/api';
 import {
   buildCreateTransferTx,
+  buildCancelTransferTx,
+  checkExistingTransfer,
   TOKEN_MINTS,
   TOKEN_DECIMALS,
   checkBalance,
   TokenType,
+  TransferStatus,
+  TransferAccountData,
 } from '@/lib/program';
+// Browser-compatible SHA256 hashing using Web Crypto API
 
 // Email validation regex (RFC 5322 simplified)
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -28,6 +34,27 @@ interface FormErrors {
   amount?: string;
 }
 
+interface ExistingTransfer {
+  transferPDA: PublicKey;
+  data: TransferAccountData;
+  amountFormatted: string;
+  tokenSymbol: string;
+  expiryDate: Date;
+  isExpired: boolean;
+}
+
+// Hash email the same way the backend does (for checking existing PDAs)
+// Uses Web Crypto API for browser compatibility
+async function hashEmail(email: string): Promise<Uint8Array> {
+  // Use a fixed salt matching the backend
+  const salt = process.env.NEXT_PUBLIC_EMAIL_SALT || 'solmail-dev-salt';
+  const normalized = email.trim().toLowerCase();
+  const encoder = new TextEncoder();
+  const data = encoder.encode(salt + normalized);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data.buffer as ArrayBuffer);
+  return new Uint8Array(hashBuffer);
+}
+
 export default function SendForm() {
   const { publicKey, signTransaction, connected } = useWallet();
   const { setVisible } = useWalletModal();
@@ -41,6 +68,11 @@ export default function SendForm() {
   const [claimLink, setClaimLink] = useState('');
   const [txSignature, setTxSignature] = useState('');
   const [errors, setErrors] = useState<FormErrors>({});
+  
+  // Existing transfer state
+  const [existingTransfer, setExistingTransfer] = useState<ExistingTransfer | null>(null);
+  const [checkingExisting, setCheckingExisting] = useState(false);
+  const [cancelling, setCancelling] = useState(false);
 
   // Validate form inputs
   const validateForm = useCallback((): boolean => {
@@ -71,6 +103,102 @@ export default function SendForm() {
     return Object.keys(newErrors).length === 0;
   }, [email, amount, token]);
 
+  // Check for existing transfer when email changes
+  useEffect(() => {
+    const checkExisting = async () => {
+      // Only check if we have a valid email and connected wallet
+      if (!publicKey || !EMAIL_REGEX.test(email)) {
+        setExistingTransfer(null);
+        return;
+      }
+
+      setCheckingExisting(true);
+      try {
+        const emailHash = await hashEmail(email);
+        const result = await checkExistingTransfer(connection, publicKey, emailHash);
+        
+        if (result) {
+          // Determine token symbol from mint
+          const tokenSymbol = result.data.tokenMint.equals(TOKEN_MINTS.SOL) ? 'SOL' : 'USDC';
+          const decimals = tokenSymbol === 'SOL' ? TOKEN_DECIMALS.SOL : TOKEN_DECIMALS.USDC;
+          const amountFormatted = (result.data.amount.toNumber() / Math.pow(10, decimals)).toFixed(decimals === 9 ? 4 : 2);
+          const expiryDate = new Date(result.data.expiry.toNumber() * 1000);
+          const isExpired = Date.now() > expiryDate.getTime();
+
+          setExistingTransfer({
+            transferPDA: result.transferPDA,
+            data: result.data,
+            amountFormatted,
+            tokenSymbol,
+            expiryDate,
+            isExpired,
+          });
+        } else {
+          setExistingTransfer(null);
+        }
+      } catch (err) {
+        console.error('Error checking existing transfer:', err);
+        setExistingTransfer(null);
+      } finally {
+        setCheckingExisting(false);
+      }
+    };
+
+    // Debounce the check
+    const timer = setTimeout(checkExisting, 500);
+    return () => clearTimeout(timer);
+  }, [email, publicKey, connection]);
+
+  // Cancel existing transfer
+  const handleCancelExisting = async () => {
+    if (!existingTransfer || !publicKey || !signTransaction) return;
+    
+    setCancelling(true);
+    const toastId = toast.loading('Cancelling existing transfer...');
+
+    try {
+      // Build cancel transaction
+      const transaction = await buildCancelTransferTx(
+        connection,
+        publicKey,
+        existingTransfer.transferPDA,
+        existingTransfer.data
+      );
+
+      // Sign
+      toast.loading('Waiting for wallet signature...', { id: toastId });
+      const signed = await signTransaction(transaction);
+
+      // Send
+      toast.loading('Sending transaction...', { id: toastId });
+      const signature = await connection.sendRawTransaction(signed.serialize(), {
+        skipPreflight: false,
+        preflightCommitment: 'confirmed',
+      });
+
+      // Confirm
+      toast.loading('Confirming...', { id: toastId });
+      await connection.confirmTransaction(
+        {
+          signature,
+          blockhash: transaction.recentBlockhash!,
+          lastValidBlockHeight: transaction.lastValidBlockHeight!,
+        },
+        'confirmed'
+      );
+
+      toast.success(`Transfer cancelled! ${existingTransfer.amountFormatted} ${existingTransfer.tokenSymbol} refunded.`, { id: toastId });
+      setExistingTransfer(null);
+      
+    } catch (error: unknown) {
+      console.error('Cancel error:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to cancel transfer';
+      toast.error(errorMsg, { id: toastId });
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -87,6 +215,18 @@ export default function SendForm() {
 
     if (!publicKey || !signTransaction) {
       toast.error('Please connect your wallet first');
+      return;
+    }
+
+    // Block if existing active transfer
+    if (existingTransfer && existingTransfer.data.status === TransferStatus.Active) {
+      toast.error('You have an active transfer to this email. Cancel it first or use a different email.');
+      return;
+    }
+
+    // Block if any existing transfer (protocol limitation)
+    if (existingTransfer) {
+      toast.error('You previously sent to this email. Please use a different email address.');
       return;
     }
 
@@ -211,6 +351,7 @@ export default function SendForm() {
     setErrors({});
     setClaimLink('');
     setTxSignature('');
+    setExistingTransfer(null);
   };
 
   // Success state
@@ -262,6 +403,71 @@ export default function SendForm() {
 
   return (
     <form onSubmit={handleSubmit} className="bg-white dark:bg-[#1a1f3a] border border-gray-200 dark:border-[#1d2646] rounded-2xl p-8 shadow-lg">
+      {/* Existing Transfer Warning */}
+      {existingTransfer && existingTransfer.data.status === TransferStatus.Active && (
+        <div className="mb-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-700/50 rounded-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-amber-600 dark:text-amber-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="font-semibold text-amber-800 dark:text-amber-200">
+                Pending Transfer Exists
+              </h4>
+              <p className="text-sm text-amber-700 dark:text-amber-300 mt-1">
+                You already have an active transfer of <strong>{existingTransfer.amountFormatted} {existingTransfer.tokenSymbol}</strong> to this email.
+                {existingTransfer.isExpired ? (
+                  <span className="block mt-1">This transfer has expired and can be reclaimed.</span>
+                ) : (
+                  <span className="block mt-1">
+                    Expires: {existingTransfer.expiryDate.toLocaleString()}
+                  </span>
+                )}
+              </p>
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleCancelExisting}
+                  disabled={cancelling}
+                  className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white rounded-lg text-sm font-medium transition disabled:opacity-50"
+                >
+                  {cancelling ? 'Cancelling...' : 'Cancel & Refund'}
+                </button>
+                <a
+                  href={`https://explorer.solana.com/address/${existingTransfer.transferPDA.toBase58()}?cluster=devnet`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 border border-amber-600 text-amber-600 dark:text-amber-400 rounded-lg text-sm font-medium hover:bg-amber-50 dark:hover:bg-amber-900/30 transition"
+                >
+                  View on Explorer
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Completed Transfer Info (claimed/cancelled/expired) */}
+      {existingTransfer && existingTransfer.data.status !== TransferStatus.Active && (
+        <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700/50 rounded-lg">
+          <div className="flex items-start gap-3">
+            <svg className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div className="flex-1">
+              <h4 className="font-semibold text-blue-800 dark:text-blue-200">
+                Previous Transfer to This Email
+              </h4>
+              <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+                You previously sent to this email (status: <strong>{existingTransfer.data.status}</strong>).
+                Due to how the protocol works, you cannot send to the same email again from this wallet.
+                <span className="block mt-1">Please use a different email address or send from another wallet.</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Email Input */}
       <div className="mb-6">
         <label htmlFor="email" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">

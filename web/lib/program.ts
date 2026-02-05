@@ -218,12 +218,19 @@ export async function buildClaimTransferTx(
 }
 
 /**
- * Fetch a transfer account's data
+ * Transfer status enum matching the on-chain program
  */
-export async function fetchTransferAccount(
-  connection: Connection,
-  transferPDA: PublicKey
-): Promise<{
+export enum TransferStatus {
+  Active = 'active',
+  Claimed = 'claimed',
+  Cancelled = 'cancelled',
+  Expired = 'expired',
+}
+
+/**
+ * Parsed transfer account data
+ */
+export interface TransferAccountData {
   sender: PublicKey;
   emailHash: number[];
   claimCodeHash: number[];
@@ -232,20 +239,99 @@ export async function fetchTransferAccount(
   escrowTokenAccount: PublicKey;
   createdAt: BN;
   expiry: BN;
-  status: { active?: object; claimed?: object; cancelled?: object; expired?: object };
+  status: TransferStatus;
   bump: number;
   escrowBump: number;
-} | null> {
+}
+
+/**
+ * Parse the status object from the on-chain account
+ */
+function parseTransferStatus(statusObj: Record<string, unknown>): TransferStatus {
+  if ('active' in statusObj) return TransferStatus.Active;
+  if ('claimed' in statusObj) return TransferStatus.Claimed;
+  if ('cancelled' in statusObj) return TransferStatus.Cancelled;
+  if ('expired' in statusObj) return TransferStatus.Expired;
+  return TransferStatus.Active; // fallback
+}
+
+/**
+ * Fetch a transfer account's data
+ */
+export async function fetchTransferAccount(
+  connection: Connection,
+  transferPDA: PublicKey
+): Promise<TransferAccountData | null> {
   const program = getProgram(connection);
 
   try {
     // Use type assertion for dynamic account access
     const accounts = program.account as Record<string, { fetch: (address: PublicKey) => Promise<unknown> }>;
-    const account = await accounts['transferAccount'].fetch(transferPDA);
-    return account as any;
+    const account = await accounts['transferAccount'].fetch(transferPDA) as any;
+    
+    return {
+      ...account,
+      status: parseTransferStatus(account.status),
+    };
   } catch {
     return null;
   }
+}
+
+/**
+ * Check if an existing transfer exists for the given sender and email hash
+ * Returns the transfer data if it exists, null otherwise
+ */
+export async function checkExistingTransfer(
+  connection: Connection,
+  sender: PublicKey,
+  emailHash: Uint8Array
+): Promise<{ transferPDA: PublicKey; data: TransferAccountData } | null> {
+  const [transferPDA] = getTransferPDA(sender, emailHash);
+  const data = await fetchTransferAccount(connection, transferPDA);
+  
+  if (data) {
+    return { transferPDA, data };
+  }
+  return null;
+}
+
+/**
+ * Build a cancel_transfer transaction
+ */
+export async function buildCancelTransferTx(
+  connection: Connection,
+  sender: PublicKey,
+  transferPDA: PublicKey,
+  transferData: TransferAccountData
+): Promise<Transaction> {
+  const program = getProgram(connection);
+
+  // Get sender's associated token account
+  const senderATA = await getAssociatedTokenAddress(transferData.tokenMint, sender);
+  const [escrowPDA] = getEscrowPDA(transferPDA);
+
+  // Build cancel instruction
+  const ix = await program.methods
+    .cancelTransfer()
+    .accounts({
+      transfer: transferPDA,
+      sender: sender,
+      senderTokenAccount: senderATA,
+      escrowTokenAccount: escrowPDA,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .instruction();
+
+  const transaction = new Transaction().add(ix);
+
+  // Get latest blockhash
+  const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
+  transaction.recentBlockhash = blockhash;
+  transaction.lastValidBlockHeight = lastValidBlockHeight;
+  transaction.feePayer = sender;
+
+  return transaction;
 }
 
 /**
@@ -355,3 +441,120 @@ export async function ensureATA(
     return { ata, needsCreation: true, instruction };
   }
 }
+
+/**
+ * Parsed transfer with additional computed fields
+ */
+export interface ParsedTransfer {
+  publicKey: PublicKey;
+  data: TransferAccountData;
+  amountFormatted: string;
+  tokenSymbol: string;
+  createdDate: Date;
+  expiryDate: Date;
+  isExpired: boolean;
+}
+
+/**
+ * Fetch all transfers created by a specific sender wallet.
+ * Uses getProgramAccounts with a memcmp filter on the sender field.
+ */
+export async function fetchAllTransfersForSender(
+  connection: Connection,
+  sender: PublicKey
+): Promise<ParsedTransfer[]> {
+  const program = getProgram(connection);
+
+  try {
+    // The TransferAccount discriminator (8 bytes) + sender pubkey starts at offset 8
+    const accounts = await connection.getProgramAccounts(PROGRAM_ID, {
+      filters: [
+        // Filter by account discriminator for TransferAccount
+        {
+          memcmp: {
+            offset: 0,
+            bytes: bs58.encode([166, 217, 148, 252, 107, 104, 0, 90]), // TransferAccount discriminator
+          },
+        },
+        // Filter by sender pubkey (starts at offset 8 after discriminator)
+        {
+          memcmp: {
+            offset: 8,
+            bytes: sender.toBase58(),
+          },
+        },
+      ],
+    });
+
+    const transfers: ParsedTransfer[] = [];
+
+    for (const { pubkey, account } of accounts) {
+      try {
+        // Decode the account data using Anchor's coder
+        const coder = program.coder.accounts;
+        const decoded = coder.decode('transferAccount', account.data) as any;
+        
+        const transferData: TransferAccountData = {
+          ...decoded,
+          status: parseTransferStatus(decoded.status),
+        };
+
+        // Determine token symbol and format amount
+        const tokenSymbol = transferData.tokenMint.equals(TOKEN_MINTS.SOL) ? 'SOL' : 'USDC';
+        const decimals = tokenSymbol === 'SOL' ? TOKEN_DECIMALS.SOL : TOKEN_DECIMALS.USDC;
+        const amountFormatted = (transferData.amount.toNumber() / Math.pow(10, decimals)).toFixed(
+          decimals === 9 ? 4 : 2
+        );
+
+        const createdDate = new Date(transferData.createdAt.toNumber() * 1000);
+        const expiryDate = new Date(transferData.expiry.toNumber() * 1000);
+        const isExpired = Date.now() > expiryDate.getTime();
+
+        transfers.push({
+          publicKey: pubkey,
+          data: transferData,
+          amountFormatted,
+          tokenSymbol,
+          createdDate,
+          expiryDate,
+          isExpired,
+        });
+      } catch (err) {
+        console.error('Failed to decode transfer account:', pubkey.toBase58(), err);
+      }
+    }
+
+    // Sort by created date (newest first)
+    transfers.sort((a, b) => b.createdDate.getTime() - a.createdDate.getTime());
+
+    return transfers;
+  } catch (err) {
+    console.error('Error fetching transfers for sender:', err);
+    return [];
+  }
+}
+
+// Base58 encoding helper
+const bs58 = {
+  encode: (bytes: number[]): string => {
+    const ALPHABET = '123456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz';
+    let result = '';
+    let num = BigInt(0);
+    for (const byte of bytes) {
+      num = num * BigInt(256) + BigInt(byte);
+    }
+    while (num > 0) {
+      result = ALPHABET[Number(num % BigInt(58))] + result;
+      num = num / BigInt(58);
+    }
+    // Handle leading zeros
+    for (const byte of bytes) {
+      if (byte === 0) {
+        result = ALPHABET[0] + result;
+      } else {
+        break;
+      }
+    }
+    return result || ALPHABET[0];
+  },
+};
