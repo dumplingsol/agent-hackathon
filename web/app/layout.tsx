@@ -4,6 +4,7 @@ import './globals.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
 import { WalletContextProvider } from '@/lib/wallet'
 import { ThemeProvider } from '@/components/ThemeProvider'
+import { GradientBackground } from '@/components/GradientBackground'
 import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -24,7 +25,10 @@ export default function RootLayout({
       <body className={`${inter.variable} ${archivo.variable} font-sans`}>
         <ThemeProvider>
           <WalletContextProvider>
-            {children}
+            <GradientBackground />
+            <div className="content-overlay">
+              {children}
+            </div>
             <Toaster position="bottom-right" richColors />
           </WalletContextProvider>
         </ThemeProvider>

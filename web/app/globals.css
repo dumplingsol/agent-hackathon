@@ -7,6 +7,29 @@
   --solana-green: #14F195;
 }
 
+/* ═══════════════════════════════════════════════════
+   GRADIENT EXPERIMENT - WebGL Mesh Background
+   To revert: see GRADIENT_EXPERIMENT.md or restore globals.css.backup
+   ═══════════════════════════════════════════════════ */
+
+/* Gradient Canvas - Stripe-style WebGL background */
+#gradient-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 0;
+  /* Custom SolRelay purple/teal theme */
+  --gradient-color-1: #6009e1;
+  --gradient-color-2: #41b9b1;
+  --gradient-color-3: #0f0f33;
+  --gradient-color-4: #8621ca;
+}
+
+#gradient-canvas.isLoaded {
+  opacity: 1;
+}
+
 /* Light mode body */
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -14,24 +37,33 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: #F3FAFF;
-  background-image: radial-gradient(circle, rgb(16 63 90 / 58%) 1px, transparent 0);
-  background-size: 20px 20px;
+  background-color: #f3f3f6;
   color: #1a1a2e;
 }
 
 /* Dark mode body */
 .dark body {
-  background-color: #0d1225;
-  background-image: radial-gradient(circle, rgba(255, 255, 255, 0.08) 1px, transparent 1px);
-  background-size: 20px 20px;
+  background-color: transparent;
   color: #E3E8EF;
+}
+
+/* Content overlay - ensure all content sits above the gradient */
+.content-overlay {
+  position: relative;
+  z-index: 10;
+  min-height: 100vh;
 }
 
 /* Heading font - Archivo */
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: var(--font-archivo), sans-serif;
   font-weight: 600;
+  color: #030306;
+}
+
+/* Dark mode headings */
+.dark h1, .dark h2, .dark h3, .dark h4, .dark h5, .dark h6, .dark .font-heading {
+  color: inherit;
 }
 
 /* Code/monospace font */

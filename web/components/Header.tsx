@@ -50,7 +50,7 @@ export default function Header() {
         {/* Logo */}
         <Link href="/" className="flex items-center space-x-2 group">
           <Logo className="w-8 h-8 transition-transform group-hover:scale-105" />
-          <span className="text-xl font-bold dark:text-white">SolRelay</span>
+          <span className="text-xl font-bold text-[#030306] dark:text-white">SolRelay</span>
         </Link>
 
         {/* Desktop Menu */}
