@@ -8,6 +8,10 @@ module.exports = {
   darkMode: 'class',
   theme: {
     extend: {
+      fontFamily: {
+        sans: ['var(--font-inter)', 'sans-serif'],
+        heading: ['var(--font-archivo)', 'sans-serif'],
+      },
       colors: {
         'solana-purple': '#9945FF',
         'solana-green': '#14F195',

@@ -28,6 +28,12 @@ body {
   color: #E3E8EF;
 }
 
+/* Heading font - Archivo */
+h1, h2, h3, h4, h5, h6, .font-heading {
+  font-family: var(--font-archivo), sans-serif;
+  font-weight: 600;
+}
+
 /* Code/monospace font */
 code, .font-mono {
   font-family: 'JetBrains Mono', 'Fira Code', source-code-pro, Menlo, Monaco, Consolas, 'Courier New',

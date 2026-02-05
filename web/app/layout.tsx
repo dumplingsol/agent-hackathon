@@ -1,12 +1,13 @@
 import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
+import { Inter, Archivo } from 'next/font/google'
 import './globals.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
 import { WalletContextProvider } from '@/lib/wallet'
 import { ThemeProvider } from '@/components/ThemeProvider'
 import { Toaster } from 'sonner'
 
-const inter = Inter({ subsets: ['latin'] })
+const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
+const archivo = Archivo({ subsets: ['latin'], variable: '--font-archivo' })
 
 export const metadata: Metadata = {
   title: 'PayInbox - Send Crypto via Email',
@@ -20,7 +21,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={`${inter.variable} ${archivo.variable} font-sans`}>
         <ThemeProvider>
           <WalletContextProvider>
             {children}
