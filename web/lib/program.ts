@@ -19,6 +19,8 @@ import {
   getAssociatedTokenAddress,
   createAssociatedTokenAccountInstruction,
   getAccount,
+  createSyncNativeInstruction,
+  NATIVE_MINT,
 } from '@solana/spl-token';
 
 import idlJson from './idl.json';
@@ -116,7 +118,16 @@ export async function buildCreateTransferTx(
   // Get sender's associated token account
   const senderATA = await getAssociatedTokenAddress(tokenMint, sender);
 
-  // Build instruction
+  // Initialize transaction
+  let transaction = new Transaction();
+
+  // If sending SOL, wrap it first
+  if (token === 'SOL') {
+    const wrapTx = await wrapSOL(connection, sender, amount);
+    transaction.instructions.push(...wrapTx.instructions);
+  }
+
+  // Build main instruction
   const ix = await program.methods
     .createTransfer(
       Array.from(emailHash) as any,
@@ -136,7 +147,7 @@ export async function buildCreateTransferTx(
     })
     .instruction();
 
-  const transaction = new Transaction().add(ix);
+  transaction.add(ix);
 
   // Get latest blockhash
   const { blockhash, lastValidBlockHeight } = await connection.getLatestBlockhash();
@@ -247,6 +258,23 @@ export async function checkBalance(
   requiredAmount: number,
   decimals: number
 ): Promise<{ sufficient: boolean; balance: number }> {
+  // Special handling for native SOL
+  if (tokenMint.equals(TOKEN_MINTS.SOL)) {
+    try {
+      const lamports = await connection.getBalance(owner);
+      const balance = lamports / Math.pow(10, decimals);
+      // Need extra 0.01 SOL for wrapping + fees
+      const requiredWithFees = requiredAmount + 0.01;
+      return {
+        sufficient: balance >= requiredWithFees,
+        balance,
+      };
+    } catch {
+      return { sufficient: false, balance: 0 };
+    }
+  }
+
+  // Standard SPL token handling
   try {
     const ata = await getAssociatedTokenAddress(tokenMint, owner);
     const account = await getAccount(connection, ata);
@@ -259,6 +287,48 @@ export async function checkBalance(
     // ATA doesn't exist
     return { sufficient: false, balance: 0 };
   }
+}
+
+/**
+ * Wrap native SOL into wSOL for SPL token transfer
+ */
+async function wrapSOL(
+  connection: Connection,
+  owner: PublicKey,
+  amount: number
+): Promise<Transaction> {
+  const tx = new Transaction();
+  const wsolATA = await getAssociatedTokenAddress(NATIVE_MINT, owner);
+
+  // Check if ATA exists
+  try {
+    await getAccount(connection, wsolATA);
+  } catch {
+    // Create ATA if it doesn't exist
+    tx.add(
+      createAssociatedTokenAccountInstruction(
+        owner, // payer
+        wsolATA, // ATA address
+        owner, // owner
+        NATIVE_MINT // mint
+      )
+    );
+  }
+
+  // Transfer SOL to the ATA
+  const lamports = Math.floor(amount * Math.pow(10, 9));
+  tx.add(
+    SystemProgram.transfer({
+      fromPubkey: owner,
+      toPubkey: wsolATA,
+      lamports,
+    })
+  );
+
+  // Sync the native balance
+  tx.add(createSyncNativeInstruction(wsolATA));
+
+  return tx;
 }
 
 /**
