@@ -67,29 +67,33 @@ export default function Header() {
           <WalletMultiButton />
         </nav>
 
-        {/* Mobile Hamburger Button */}
-        <button
-          onClick={() => setIsMenuOpen(!isMenuOpen)}
-          className="md:hidden w-10 h-10 flex flex-col items-center justify-center space-y-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-          aria-label="Toggle menu"
-          aria-expanded={isMenuOpen}
-        >
-          <span 
-            className={`w-5 h-0.5 bg-gray-700 dark:bg-gray-300 transition-all duration-300 ${
-              isMenuOpen ? 'rotate-45 translate-y-2' : ''
-            }`} 
-          />
-          <span 
-            className={`w-5 h-0.5 bg-gray-700 dark:bg-gray-300 transition-all duration-300 ${
-              isMenuOpen ? 'opacity-0' : ''
-            }`} 
-          />
-          <span 
-            className={`w-5 h-0.5 bg-gray-700 dark:bg-gray-300 transition-all duration-300 ${
-              isMenuOpen ? '-rotate-45 -translate-y-2' : ''
-            }`} 
-          />
-        </button>
+        {/* Mobile: Theme Toggle + Hamburger */}
+        <div className="flex md:hidden items-center space-x-2">
+          <ThemeToggle />
+          
+          <button
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="w-10 h-10 flex flex-col items-center justify-center space-y-1.5 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-100 dark:hover:bg-gray-800 transition"
+            aria-label="Toggle menu"
+            aria-expanded={isMenuOpen}
+          >
+            <span 
+              className={`w-5 h-0.5 bg-gray-700 dark:bg-gray-300 transition-all duration-300 ${
+                isMenuOpen ? 'rotate-45 translate-y-2' : ''
+              }`} 
+            />
+            <span 
+              className={`w-5 h-0.5 bg-gray-700 dark:bg-gray-300 transition-all duration-300 ${
+                isMenuOpen ? 'opacity-0' : ''
+              }`} 
+            />
+            <span 
+              className={`w-5 h-0.5 bg-gray-700 dark:bg-gray-300 transition-all duration-300 ${
+                isMenuOpen ? '-rotate-45 -translate-y-2' : ''
+              }`} 
+            />
+          </button>
+        </div>
       </div>
 
       {/* Mobile Menu Overlay */}
@@ -118,15 +122,6 @@ export default function Header() {
             </svg>
             <span>How it works</span>
           </Link>
-
-          {/* Divider */}
-          <div className="border-t border-gray-200 dark:border-gray-700" />
-
-          {/* Theme toggle row */}
-          <div className="flex items-center justify-between py-2 px-3">
-            <span className="text-gray-700 dark:text-gray-300">Theme</span>
-            <ThemeToggle />
-          </div>
 
           {/* Divider */}
           <div className="border-t border-gray-200 dark:border-gray-700" />
