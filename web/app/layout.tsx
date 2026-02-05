@@ -10,7 +10,7 @@ const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const archivo = Archivo({ subsets: ['latin'], variable: '--font-archivo' })
 
 export const metadata: Metadata = {
-  title: 'PayInbox - Send Crypto via Email',
+  title: 'SolRelay - Send Crypto via Email',
   description: 'Send SOL or USDC to anyone via email. No wallet required.',
 }
 

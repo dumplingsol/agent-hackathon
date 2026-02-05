@@ -1,7 +1,8 @@
-# PayInbox - Send Crypto via Email
+# SolRelay - Send Crypto via Email
 
 Send SOL or USDC to anyone using just their email address. No wallet required for recipients.
 
+**Live at:** https://solrelay.io  
 Built for the Colosseum Agent Hackathon. Powered by Solana.
 
 ## 🎯 What It Does

@@ -10,7 +10,7 @@ export default function HowItWorks() {
 
       <section className="max-w-4xl mx-auto px-4 py-12 md:py-20">
         <h1 className="text-3xl md:text-4xl font-bold mb-8 text-center dark:text-white">
-          How PayInbox Works
+          How SolRelay Works
         </h1>
 
         <div className="space-y-10 md:space-y-12">
