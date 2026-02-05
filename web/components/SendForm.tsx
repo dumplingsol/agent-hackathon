@@ -163,20 +163,24 @@ export default function SendForm() {
         throw new Error(`Transaction failed: ${JSON.stringify(confirmation.value.err)}`);
       }
 
-      // Step 7: Confirm with agent
-      toast.loading('Finalizing...', { id: toastId });
-      await confirmTransfer(
-        transferData.claimCode!,
-        signature,
-        transferPDA.toBase58()
-      );
+      // Step 7: Confirm with agent (only if we have a claim code, i.e. dev mode)
+      if (transferData.claimCode) {
+        toast.loading('Finalizing...', { id: toastId });
+        await confirmTransfer(
+          transferData.claimCode,
+          signature,
+          transferPDA.toBase58()
+        );
+      }
 
       // Success!
       const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || window.location.origin;
-      setClaimLink(`${frontendUrl}/claim/${transferData.claimCode}`);
+      if (transferData.claimCode) {
+        setClaimLink(`${frontendUrl}/claim/${transferData.claimCode}`);
+      }
       setTxSignature(signature);
       setSuccess(true);
-      toast.success('Transfer created on-chain! 🎉', { id: toastId });
+      toast.success('Transfer sent! Recipient will receive claim link via email 🎉', { id: toastId });
 
     } catch (error: unknown) {
       console.error('Transfer error:', error);
@@ -239,10 +243,12 @@ export default function SendForm() {
           </div>
         )}
 
-        <div className="bg-white dark:bg-[#0d1225] border border-gray-200 dark:border-[#1d2646] rounded-lg p-4 mb-6">
-          <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Claim Link (for testing)</p>
-          <code className="text-sm break-all text-gray-800 dark:text-gray-200">{claimLink}</code>
-        </div>
+        {claimLink && (
+          <div className="bg-white dark:bg-[#0d1225] border border-gray-200 dark:border-[#1d2646] rounded-lg p-4 mb-6">
+            <p className="text-xs text-gray-500 dark:text-gray-400 mb-2">Claim Link (for testing)</p>
+            <code className="text-sm break-all text-gray-800 dark:text-gray-200">{claimLink}</code>
+          </div>
+        )}
 
         <button
           onClick={handleReset}
