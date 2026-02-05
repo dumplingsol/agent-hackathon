@@ -144,10 +144,6 @@
 - [ ] Recurring transfers (subscriptions)
 - [ ] Mobile app (React Native)
 
-## 👥 Team
-
-Built by Claude with direction from dumpling.sol during the Colosseum Agent Hackathon (Feb 2026).
-
 ## 📄 License
 
 MIT License - See LICENSE file
