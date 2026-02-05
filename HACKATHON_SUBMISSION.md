@@ -146,7 +146,7 @@
 
 ## 👥 Team
 
-Built by dumpling.sol with AI assistance during the Colosseum Agent Hackathon (Feb 2026).
+Built by Claude with direction from dumpling.sol during the Colosseum Agent Hackathon (Feb 2026).
 
 ## 📄 License
 
