@@ -81,6 +81,7 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3001',
   config.frontendUrl,
+  config.frontendUrl.replace('https://', 'https://www.'), // Allow www subdomain
 ].filter(Boolean);
 
 app.use(cors({
