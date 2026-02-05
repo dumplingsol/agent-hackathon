@@ -14,6 +14,17 @@ Built for the Colosseum Agent Hackathon. Powered by Solana.
 
 If unclaimed after 72 hours, funds automatically return to sender.
 
+## ✨ Features
+
+- 📧 **Email-based transfers** - Send SOL/USDC to any email address
+- 🔒 **On-chain escrow** - Non-custodial, program-controlled funds
+- 📜 **Transfer history** - View all your sent transfers with status
+- ❌ **Cancel transfers** - Reclaim funds from pending transfers anytime
+- ⏱️ **Auto-expiry** - Unclaimed funds return after 72 hours
+- 🔐 **Secure** - Constant-time verification, PDA-based accounts
+- 🌙 **Dark mode** - Full theme support
+- 📱 **Mobile responsive** - Works on all devices
+
 ## 🏗️ Architecture
 
 ```
