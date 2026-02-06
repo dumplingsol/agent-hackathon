@@ -41,11 +41,7 @@ body {
   color: #E3E8EF;
 }
 
-/* Dark mode body */
-.dark body {
-  background-color: transparent;
-  color: #E3E8EF;
-}
+/* Dark mode body - removed override since we're forcing dark mode */
 
 /* Content overlay - ensure all content sits above the gradient */
 .content-overlay {
