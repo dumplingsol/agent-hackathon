@@ -37,10 +37,8 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background: linear-gradient(135deg, #f26fe3 0%, #4014f1 100%);
-  background-attachment: fixed;
-  color: #1a1a2e;
-  text-shadow: 0 1px 5px #00000033;
+  background-color: #0e0e19;
+  color: #E3E8EF;
 }
 
 /* Dark mode body */
@@ -60,8 +58,6 @@ body {
 h1, h2, h3, h4, h5, h6, .font-heading {
   font-family: var(--font-archivo), sans-serif;
   font-weight: 600;
-  color: #030306;
-  text-shadow: 0 1px 5px #00000033;
 }
 
 /* Dark mode headings */
@@ -77,9 +73,10 @@ code, .font-mono {
 
 /* Wallet Adapter button overrides */
 .wallet-adapter-button {
-  background: linear-gradient(135deg, #9945FF 0%, #14F195 100%) !important;
+  background: linear-gradient(135deg, #f26fe3 0%, #4014f1 100%) !important;
   transition: all 0.2s ease;
   font-weight: 600 !important;
+  text-shadow: 0 1px 5px #00000033;
 }
 
 .wallet-adapter-button:hover:not([disabled]) {
@@ -90,6 +87,25 @@ code, .font-mono {
 .wallet-adapter-button[disabled] {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* Solana gradient button styles */
+.btn-gradient,
+button[class*="bg-purple"],
+button[class*="bg-gradient"],
+.solana-btn {
+  background: linear-gradient(135deg, #f26fe3 0%, #4014f1 100%) !important;
+  text-shadow: 0 1px 5px #00000033;
+  border: none;
+  color: white;
+}
+
+.btn-gradient:hover,
+button[class*="bg-purple"]:hover,
+button[class*="bg-gradient"]:hover,
+.solana-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
 }
 
 /* Wallet modal dark mode */
