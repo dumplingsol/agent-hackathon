@@ -85,15 +85,15 @@ export function GradientBackground() {
     const currentTheme = theme === 'system' ? systemTheme : theme;
     const isDark = currentTheme === 'dark';
 
-    // Theme-aware colors: Purple → Blue → Cyan gradient
+    // Theme-aware colors: Pink/Magenta/Purple/Blue gradient
     const colors = isDark 
-      ? ['#9945FF', '#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9', '#06B6D4', '#00E5FF'] // Purple→Blue→Cyan
-      : ['#9945FF', '#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9', '#06B6D4', '#00E5FF']; // Same for light
+      ? ['#ff70d2', '#f958c6', '#b41adb', '#4125f4', '#3418ec'] // Dark mode glow colors
+      : ['#9945FF', '#8B5CF6', '#6366F1', '#3B82F6', '#0EA5E9', '#06B6D4', '#00E5FF']; // Light mode: Purple→Blue→Cyan
 
-    // Settings from user
+    // Settings
     const strandCount = 110;
     const lineWidth = 2.5;
-    const spread = 400;
+    const spread = 1180;
     const opacity = 0.9;
     const flowSpeed = 0.6;
     const ribbons = [{
