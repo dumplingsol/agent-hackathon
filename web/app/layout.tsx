@@ -1,5 +1,5 @@
 import type { Metadata } from 'next'
-import { Inter, Archivo } from 'next/font/google'
+import { Inter, Archivo, Kanit } from 'next/font/google'
 import './globals.css'
 import '@solana/wallet-adapter-react-ui/styles.css'
 import { WalletContextProvider } from '@/lib/wallet'
@@ -9,6 +9,7 @@ import { Toaster } from 'sonner'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
 const archivo = Archivo({ subsets: ['latin'], variable: '--font-archivo' })
+const kanit = Kanit({ subsets: ['latin'], weight: '500', variable: '--font-kanit' })
 
 export const metadata: Metadata = {
   title: 'SolRelay - Send Crypto via Email',
@@ -22,7 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={`${inter.variable} ${archivo.variable} font-sans`}>
+      <body className={`${inter.variable} ${archivo.variable} ${kanit.variable} font-sans`}>
         <ThemeProvider>
           <WalletContextProvider>
             <GradientBackground />

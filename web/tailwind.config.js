@@ -11,6 +11,7 @@ module.exports = {
       fontFamily: {
         sans: ['var(--font-inter)', 'sans-serif'],
         heading: ['var(--font-archivo)', 'sans-serif'],
+        logo: ['var(--font-kanit)', 'sans-serif'],
       },
       colors: {
         'solana-purple': '#9945FF',
