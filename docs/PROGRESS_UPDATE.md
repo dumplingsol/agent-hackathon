@@ -65,7 +65,7 @@ cargo install --git https://github.com/coral-xyz/anchor avm
 ### Step 2: Initialize Anchor Project (~5 min)
 ```bash
 cd program
-anchor init solmail
+anchor init solrelay
 # Copy lib.rs into generated structure
 ```
 

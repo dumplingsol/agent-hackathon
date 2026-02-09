@@ -19,7 +19,7 @@ avm use latest
 ### 2. Build Smart Contract
 ```bash
 cd program
-anchor init solmail --javascript
+anchor init solrelay --javascript
 # Copy lib.rs content
 anchor build
 anchor test

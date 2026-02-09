@@ -2,7 +2,7 @@
 
 ## Summary
 
-The Solmail application now has a fully functional end-to-end on-chain transaction flow for Solana devnet.
+The Solrelay application now has a fully functional end-to-end on-chain transaction flow for Solana devnet.
 
 ## What Was Done
 

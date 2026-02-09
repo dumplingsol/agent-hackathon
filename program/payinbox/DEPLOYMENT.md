@@ -1,4 +1,4 @@
-# Solmail (PayInbox) Deployment Summary
+# Solrelay (PayInbox) Deployment Summary
 
 ## ✅ Deployment Status: SUCCESS
 

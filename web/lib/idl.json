@@ -1,7 +1,7 @@
 {
   "address": "14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h",
   "metadata": {
-    "name": "solmail",
+    "name": "solrelay",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Send crypto via email - no wallet required"

@@ -1,4 +1,4 @@
-# SolMail - 9 Day Build Plan
+# SolRelay - 9 Day Build Plan
 
 **Start:** Feb 3, 2026  
 **Deadline:** Feb 12, 2026 (12:00 PM EST)  
@@ -18,7 +18,7 @@
 ### Tasks
 1. **Setup Anchor project**
    ```bash
-   anchor init solmail-program
+   anchor init solrelay-program
    ```
 
 2. **Define account structures**
@@ -40,7 +40,7 @@
    ```
 
 5. **Initial commit to GitHub**
-   - Public repo: `solmail-hackathon`
+   - Public repo: `solrelay-hackathon`
    - README with project overview
    - Architecture docs
 
@@ -383,7 +383,7 @@
 1. Script:
    ```
    0:00 - Problem: "Sending crypto requires a wallet"
-   0:15 - Solution: "SolMail makes it as easy as email"
+   0:15 - Solution: "SolRelay makes it as easy as email"
    0:30 - Demo: Create transfer (live)
    1:00 - Demo: Receive email (screen recording)
    1:15 - Demo: Claim with new wallet (live)
@@ -415,7 +415,7 @@
 
 **Forum Engagement:**
 1. Create project post
-   - Title: "SolMail: Send crypto via email (no wallet needed)"
+   - Title: "SolRelay: Send crypto via email (no wallet needed)"
    - Body: Problem, solution, demo link
    - Tags: `payments`, `consumer`, `ai`, `progress-update`
 
@@ -466,11 +466,11 @@
      -H "Authorization: Bearer YOUR_API_KEY" \
      -H "Content-Type: application/json" \
      -d '{
-       "name": "SolMail",
+       "name": "SolRelay",
        "description": "Send crypto via email. No wallet required.",
        "repoLink": "https://github.com/your-repo",
        "solanaIntegration": "Smart contract escrow on Solana. Fast settlement, low fees enable small-value transfers.",
-       "technicalDemoLink": "https://solmail.vercel.app",
+       "technicalDemoLink": "https://solrelay.vercel.app",
        "presentationLink": "https://youtube.com/watch?v=...",
        "tags": ["payments", "consumer", "ai"]
      }'
@@ -483,7 +483,7 @@
 
 **Forum:**
 1. Final progress update post
-   - "SolMail is live! Here's what we built..."
+   - "SolRelay is live! Here's what we built..."
    - Share metrics, learnings, screenshots
 
 2. Upvote interesting projects

@@ -47,7 +47,7 @@ interface ExistingTransfer {
 // Uses Web Crypto API for browser compatibility
 async function hashEmail(email: string): Promise<Uint8Array> {
   // Use a fixed salt matching the backend
-  const salt = process.env.NEXT_PUBLIC_EMAIL_SALT || 'solmail-dev-salt';
+  const salt = process.env.NEXT_PUBLIC_EMAIL_SALT || 'solrelay-dev-salt';
   const normalized = email.trim().toLowerCase();
   const encoder = new TextEncoder();
   const data = encoder.encode(salt + normalized);

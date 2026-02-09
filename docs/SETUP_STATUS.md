@@ -59,10 +59,10 @@
 #### A. Create GitHub Repository
 Since gh CLI not authenticated, please:
 1. Go to https://github.com/new
-2. Create repo: `solmail-hackathon`
+2. Create repo: `solrelay-hackathon`
 3. Make it **PUBLIC**
 4. Don't initialize with README (we have code already)
-5. Copy the SSH URL (should be: `git@github.com:dumplingsol/solmail-hackathon.git`)
+5. Copy the SSH URL (should be: `git@github.com:dumplingsol/solrelay-hackathon.git`)
 6. Give me the URL → I'll push code
 
 #### B. Vercel Setup

@@ -264,7 +264,7 @@ node setup-database.js --check
 ## Files
 
 ```
-solmail/
+solrelay/
 ├── supabase-schema.sql       # Database schema
 ├── AUTONOMOUS_ARCHITECTURE.md # Design document
 ├── AUTONOMOUS_README.md      # This file

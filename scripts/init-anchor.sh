@@ -8,7 +8,7 @@ echo ""
 # Setup environment
 export PATH="$HOME/.cargo/bin:$PATH"
 
-cd ~/clawd/solmail/program
+cd ~/clawd/solrelay/program
 
 # Initialize Anchor project
 echo "Initializing Anchor workspace..."

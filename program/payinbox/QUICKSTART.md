@@ -1,8 +1,8 @@
-# Solmail PayInbox - Quick Start Guide
+# Solrelay PayInbox - Quick Start Guide
 
 ## 🎉 Deployment Complete!
 
-Your Solmail PayInbox program is now live on Solana Devnet!
+Your Solrelay PayInbox program is now live on Solana Devnet!
 
 **Program ID:** `14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h`
 
@@ -19,7 +19,7 @@ Your Solmail PayInbox program is now live on Solana Devnet!
 
 - **Explorer:** https://explorer.solana.com/address/14bVLKMUaYx9qL8NPNvhEJS4qtemH8hGZSDyF5qjXS8h?cluster=devnet
 - **Deployment Details:** See `DEPLOYMENT.md`
-- **IDL Location:** `target/idl/solmail.json`
+- **IDL Location:** `target/idl/solrelay.json`
 - **Program Binary:** `target/deploy/payinbox.so`
 
 ## Using the Program
@@ -117,7 +117,7 @@ payinbox/
 │   ├── deploy/
 │   │   └── payinbox.so      # Compiled program binary
 │   └── idl/
-│       └── solmail.json     # Interface Definition Language file
+│       └── solrelay.json     # Interface Definition Language file
 ├── tests/
 │   └── payinbox.js          # Test file (needs updating)
 ├── DEPLOYMENT.md            # Detailed deployment info
@@ -136,7 +136,7 @@ payinbox/
 
 - Check `DEPLOYMENT.md` for technical details
 - Review the program code in `programs/payinbox/src/lib.rs`
-- View the IDL structure in `target/idl/solmail.json`
+- View the IDL structure in `target/idl/solrelay.json`
 - Test on devnet before mainnet deployment
 
 ## Resources

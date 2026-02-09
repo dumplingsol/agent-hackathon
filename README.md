@@ -43,7 +43,7 @@ If unclaimed after 72 hours, funds automatically return to sender.
 ## 📁 Project Structure
 
 ```
-solmail/
+solrelay/
 ├── program/             # Solana on-chain program
 │   └── payinbox/        # Anchor workspace
 │       └── programs/
@@ -72,7 +72,7 @@ solmail/
 ### 1. Clone and Install
 
 ```bash
-cd solmail
+cd solrelay
 
 # Install agent dependencies
 cd agent && npm install

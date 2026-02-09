@@ -1,4 +1,4 @@
-# SolMail - Project Status
+# SolRelay - Project Status
 
 **Last Updated:** 2026-02-03 21:58 GMT+1  
 **Days Remaining:** 9  

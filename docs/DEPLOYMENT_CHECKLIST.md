@@ -25,20 +25,20 @@
 
 ### Step 1: Initialize Anchor Project
 ```bash
-cd ~/clawd/solmail/program
-anchor init solmail --javascript
+cd ~/clawd/solrelay/program
+anchor init solrelay --javascript
 ```
 
 ### Step 2: Copy Contract Code
 ```bash
-# Copy lib.rs into programs/solmail/src/lib.rs
-cp ~/clawd/solmail/program/lib.rs programs/solmail/src/lib.rs
+# Copy lib.rs into programs/solrelay/src/lib.rs
+cp ~/clawd/solrelay/program/lib.rs programs/solrelay/src/lib.rs
 ```
 
 ### Step 3: Update Anchor.toml
 ```toml
 [programs.devnet]
-solmail = "YOUR_PROGRAM_ID_HERE"
+solrelay = "YOUR_PROGRAM_ID_HERE"
 
 [provider]
 cluster = "devnet"
@@ -52,7 +52,7 @@ anchor build
 
 **Expected output:**
 - Compiled successfully
-- Binary at `target/deploy/solmail.so`
+- Binary at `target/deploy/solrelay.so`
 - Program ID displayed
 
 ### Step 5: Deploy
@@ -78,7 +78,7 @@ solana program show <PROGRAM_ID>
 
 ### Step 1: Update Configuration
 ```bash
-cd ~/clawd/solmail/agent
+cd ~/clawd/solrelay/agent
 nano .env
 
 # Update these:
@@ -109,7 +109,7 @@ curl http://localhost:3001/health
 
 ### Step 1: Update Environment
 ```bash
-cd ~/clawd/solmail/web
+cd ~/clawd/solrelay/web
 cp .env.local.example .env.local
 nano .env.local
 

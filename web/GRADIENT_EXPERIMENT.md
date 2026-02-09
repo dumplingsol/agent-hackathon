@@ -32,13 +32,13 @@ Two experimental gradient backgrounds for the SolRelay frontend:
 
 **To use WebGL Mesh Gradient:**
 ```bash
-cd /home/clawd/clawd/solmail/web
+cd /home/clawd/clawd/solrelay/web
 cp components/GradientBackground.webgl.tsx components/GradientBackground.tsx
 ```
 
 **To use Flowing Line Gradient:**
 ```bash
-cd /home/clawd/clawd/solmail/web
+cd /home/clawd/clawd/solrelay/web
 # Already active (current state)
 ```
 
@@ -79,7 +79,7 @@ gradient.noiseSpeed = 9e-6; // Animation speed (low = slow/smooth)
 ### Quick Revert (restore original styling)
 
 ```bash
-cd /home/clawd/clawd/solmail/web
+cd /home/clawd/clawd/solrelay/web
 
 # Restore original globals.css
 cp app/globals.css.backup app/globals.css

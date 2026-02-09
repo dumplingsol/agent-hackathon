@@ -12,7 +12,7 @@ const MIN_EXPIRY_SECONDS: i64 = 3600;
 const MAX_CLAIM_CODE_LEN: usize = 256;
 
 #[program]
-pub mod solmail {
+pub mod solrelay {
     use super::*;
 
     /// Create a new transfer escrow

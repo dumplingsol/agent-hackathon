@@ -1,7 +1,7 @@
 /**
- * Solmail Program Client
+ * Solrelay Program Client
  * 
- * Handles all on-chain interactions with the Solmail program.
+ * Handles all on-chain interactions with the Solrelay program.
  * Uses @coral-xyz/anchor for transaction building and signing.
  */
 

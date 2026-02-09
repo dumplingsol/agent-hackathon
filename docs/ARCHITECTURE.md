@@ -1,4 +1,4 @@
-# SolMail Architecture
+# SolRelay Architecture
 
 ## System Overview
 
@@ -201,7 +201,7 @@ POST /api/cancel
 **Header:**
 ```
 ┌────────────────────────────────────────────┐
-│ [Logo] SolMail        How it works | [Connect Wallet] │
+│ [Logo] SolRelay        How it works | [Connect Wallet] │
 └────────────────────────────────────────────┘
 ```
 
@@ -382,7 +382,7 @@ If generating new wallet:
 
 ### Frontend
 - **Host:** Vercel (Next.js native)
-- **Domain:** solmail.xyz or similar
+- **Domain:** solrelay.xyz or similar
 - **CDN:** Cloudflare (optional)
 
 ---

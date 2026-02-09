@@ -1,4 +1,4 @@
-//! # PayInbox (Solmail) - Email-to-Crypto Transfer Protocol
+//! # PayInbox (Solrelay) - Email-to-Crypto Transfer Protocol
 //!
 //! A Solana program that enables sending SPL tokens to anyone via email,
 //! even if they don't have a wallet yet. Funds are held in escrow until
@@ -44,7 +44,7 @@ const MIN_TRANSFER_AMOUNT: u64 = 1;
 // ============================================================================
 
 #[program]
-pub mod solmail {
+pub mod solrelay {
     use super::*;
 
     /// Create a new token transfer escrow.

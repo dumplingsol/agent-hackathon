@@ -1,7 +1,7 @@
 # Day 1 Summary - Feb 3, 2026
 
 ## 🎯 Mission
-Build **SolMail** - Send crypto via email (no wallet required) for Colosseum Agent Hackathon
+Build **SolRelay** - Send crypto via email (no wallet required) for Colosseum Agent Hackathon
 
 ---
 

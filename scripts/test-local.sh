@@ -1,9 +1,9 @@
 #!/bin/bash
-# Test script for local Solmail development
+# Test script for local Solrelay development
 
 set -e
 
-echo "=== Solmail Local Test Script ==="
+echo "=== Solrelay Local Test Script ==="
 echo ""
 
 # Check if agent is running

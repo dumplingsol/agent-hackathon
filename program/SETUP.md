@@ -21,7 +21,7 @@ avm use latest
 
 ```bash
 cd program
-anchor init solmail --javascript
+anchor init solrelay --javascript
 ```
 
 ## Build & Test

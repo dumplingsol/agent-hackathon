@@ -62,7 +62,7 @@ anchor --version
 
 ### Step 2: Initialize Project (2 min)
 ```bash
-cd ~/clawd/solmail
+cd ~/clawd/solrelay
 ./init-anchor.sh
 ```
 
@@ -273,7 +273,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 avm --version
 
 # If working, run:
-cd ~/clawd/solmail
+cd ~/clawd/solrelay
 ./init-anchor.sh
 ./deploy.sh
 

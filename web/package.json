@@ -1,5 +1,5 @@
 {
-  "name": "payinbox-web",
+  "name": "solrelay-web",
   "version": "1.0.0",
   "description": "PayInbox frontend - send crypto via email",
   "scripts": {

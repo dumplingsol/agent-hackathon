@@ -1,5 +1,5 @@
 {
-  "name": "payinbox-monorepo",
+  "name": "solrelay",
   "version": "1.0.0",
   "private": true,
   "description": "PayInbox - Send crypto via email",
