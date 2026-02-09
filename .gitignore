@@ -50,3 +50,14 @@ test-ledger/
 *.pem
 *.key
 secrets/
+
+# Secrets & credentials
+.env
+.env.*
+*.key
+*.pem
+*.secret
+secrets/
+wallet*.json
+*-wallet.json
+service-account*.json
